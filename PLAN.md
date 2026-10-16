@@ -269,18 +269,21 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Copy: Ctrl/Cmd+C on a focused cell copies its text (HighTable feature; the earlier "not planned" note was wrong).
 - [x] Long values (> 100 characters) get a tooltip.
 - [x] Fresh table per data set (scroll, sort, focus, hidden columns reset); `Page` renders it keyed by data set.
-- [x] CSS ported from HighTable (styled variant), incl. the hyparquet logo in the corner cell.
+- [x] CSS ported from HighTable (styled variant). The hyparquet logo in the corner cell was later replaced by the row number sort header (below).
 - [x] Parity checked against the React app on the same file: identical headers, first 15 rows, rows after sorting by `label1`, `aria-sort`; column widths within 1–2 px.
 - [x] Tests: viewport math, column width rules/storage, and a component test (grid semantics, fetching, sort cycle, keyboard, hide/show, resize + persistence, fetch errors).
 - ~~Row selection~~ – **deferred** (decided 2026-10-16): not enabled in the original app (HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither), and nothing uses a selection yet. Revisit if a feature needs it, e.g. exporting selected rows.
 - [x] Target size (WCAG 2.5.8, fixed 2026-10-16): column menu button 20×20 → 24×24 px, resize handle hit area 8 → 24 px wide (visible line still 4 px). Both sit inside the clickable header, so the spacing exception cannot apply. Header `padding-right` grows from `10px + 2.5rem` (50 px) to `48px + 1rem` (64 px), so auto-measured columns are 14 px wider than in the original. The same review found JSON toggles in the Metadata lens on adjacent lines too close for the spacing exception; they now have `min-height`/`min-width: 24px`. Checked in the browser: every target in all lenses is ≥ 24×24 or passes the spacing exception (file `<select>` 21 px high and lens button 17 px high pass by spacing).
 - [ ] Dragging alternative (WCAG 2.5.7) – moved to [Open decisions](#open-decisions--after-phase-8).
+- [x] Row number header (decided 2026-10-16): the corner cell is a `columnheader` "Row number"; click/Enter/Space clears all sorting (file order). It has `aria-sort="ascending"` while no other column is sorted. Multi-column sort (HighTable `toggleColumn`) is kept as is; this header is the way back to file order.
+- Fixed-width dot on headers (4×4 px, `#9d9cd5`, ≈ 2.3:1 on `#f0f0f0`): client decision 2026-10-16 – not information needed to use the table, so WCAG 1.4.11 does not apply. Kept as in HighTable.
 
 Deviations from HighTable (accessibility):
 - No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
 - Data cells are `role="gridcell"` (HighTable: `cell`, invalid inside `grid`); `aria-sort` only on the primary sort column.
 - Resize handle is a focusable `separator` (APG window splitter) instead of a `spinbutton`.
 - Menu button 24×24 px and resize hit area 24 px wide (HighTable: 20×20 and 8 px), see 2.5.8 above.
+- Corner cell is a sortable "Row number" header that resets sorting (HighTable: empty cell with the hyparquet logo).
 
 ### Phase 6 – Search (D8)
 - [ ] `src/lib/search.ts`: normalise + parse query → `{ substring: { label, value }, exact: { label, value }[] }`; `matches(row)`; unit tests for every row of the 4.2 table and the edge cases (trailing dot, uppercase, > 5 labels, empty).
@@ -315,5 +318,4 @@ Need a decision from the client; implement together with any changes that come o
 - `sortableDataFrame` sorts by fetching whole columns; on very large files the first sort is expensive – acceptable or needs worker?
 - D11: final production data source (bundled vs. external URL) – deferred; an external URL also needs CORS + range-request support on that server, and must expose `Content-Range` (`Access-Control-Expose-Headers`) for the size probe in `source.ts`.
 - Not planned (not used by the current app): HighTable cell double-click handler. Add only on request.
-- The corner cell loads the hyparquet logo from `hyperparam.app` (as the original): a third-party request on every page load.
 - TypeScript is held at 6.x: `typescript-eslint` 8.71.2 requires `typescript <6.1.0` (npm registry). Revisit when typescript-eslint supports TS 7.

@@ -49,7 +49,7 @@ describe('Table', () => {
     expect(grid.getAttribute('aria-rowcount')).toBe(String(df.numRows + 1))
     expect(grid.getAttribute('aria-colcount')).toBe(String(df.columnDescriptors.length + 1))
     const headers = within(grid).getAllByRole('columnheader').map(th => th.getAttribute('aria-label'))
-    expect(headers).toEqual(df.columnDescriptors.map(c => c.name))
+    expect(headers).toEqual(['Row number', ...df.columnDescriptors.map(c => c.name)])
   })
 
   it('fetches and shows cell values, with 1-based row numbers', async () => {
@@ -75,6 +75,29 @@ describe('Table', () => {
 
     fireEvent.click(header)
     expect(header.getAttribute('aria-sort')).toBe('none')
+  })
+
+  it('resets a multi-column sort to file order from the row number header', async () => {
+    const { grid } = renderTable()
+    await loaded(grid)
+    const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
+    const label1 = within(grid).getByRole('columnheader', { name: 'label1' })
+    expect(corner.getAttribute('aria-sort')).toBe('ascending')
+
+    fireEvent.click(within(grid).getByRole('columnheader', { name: 'label0' }))
+    fireEvent.click(label1)
+    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(expected.map(row => String(row.label1)).sort()[0]) })
+    expect(corner.getAttribute('aria-sort')).toBe('none')
+
+    fireEvent.click(corner)
+    expect(corner.getAttribute('aria-sort')).toBe('ascending')
+    expect(label1.getAttribute('aria-sort')).toBe('none')
+    await waitFor(() => { expect(within(grid).getAllByRole('rowheader')[0].textContent).toBe('1') })
+    expect(firstRowValue(grid, 'label1')).toBe(stringify(expected[0].label1))
+
+    fireEvent.click(label1)
+    fireEvent.keyDown(corner, { key: 'Enter' })
+    expect(corner.getAttribute('aria-sort')).toBe('ascending')
   })
 
   it('has one tab stop and moves it with the arrow keys', async () => {

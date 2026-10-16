@@ -149,18 +149,23 @@
   outline: none;
 }
 
-/* corner and row numbers */
+/* corner (row number header) and row numbers */
 .table .table-corner {
-  /* hyparquet logo, as in tapir-hyparquet */
-  background: url('https://hyperparam.app/assets/table/hyparquet.svg') #f9f4ff no-repeat center 6px;
+  background-color: #f9f4ff;
   border-right: 1px solid #ccc;
   box-shadow: inset 0 0 4px #0003;
+  color: #bbb;
   left: 0;
   max-width: var(--row-number-width);
   min-width: var(--row-number-width);
+  padding: 0;
   position: sticky;
+  text-align: center;
   top: 0;
   z-index: calc(var(--header-z) + 3);
+}
+.table .table-corner[aria-sort="ascending"] {
+  color: #444;
 }
 .table th[role="rowheader"] {
   background-color: #f0f0f0;

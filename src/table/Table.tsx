@@ -278,12 +278,27 @@ export default function Table(props: TableProps): JSX.Element {
           <caption id={captionId} class="visually-hidden">{props.name}</caption>
           <thead>
             <tr ref={el => { headerRow = el }} aria-rowindex={1}>
-              <td
+              <th
                 class="table-corner"
+                scope="col"
+                role="columnheader"
                 aria-colindex={1}
+                aria-label="Row number"
+                aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
+                title={orderBy().length === 0 ? 'Sorted by row number (file order)' : 'Press to reset sorting to row number (file order)'}
                 tabIndex={tabIndexFor(1, 1)}
                 onMouseDown={() => setPosition({ row: 1, col: 1 })}
-              />
+                onClick={() => setOrderBy([])}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    setOrderBy([])
+                  }
+                }}
+              >
+                <span aria-hidden="true">{orderBy().length === 0 ? '\u2b61' : '\u21c5'}</span>
+              </th>
               <For each={columns()}>
                 {(column, index) => <ColumnHeader
                   column={column}
