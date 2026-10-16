@@ -227,12 +227,13 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Unit tests: synthetic metadata for exact values + invariants on the sample files (`test/samples.ts` loads their metadata).
 
 ### Phase 2 – Data layer
-- [ ] `src/lib/source.ts`: build `AsyncBuffer` from asset URL via `asyncBufferFromUrl` + `cachedAsyncBuffer`; fallback to full `fetch().arrayBuffer()` if range requests are unsupported (verify Vite dev server and GitHub Pages behaviour).
-- [ ] `src/lib/dataset.ts`: list datasets from `import.meta.glob(..., { query: '?url', import: 'default', eager: true })` (names + URLs only, no download); `loadDataSet(url)` → `{ name, byteLength, metadata, df }`.
-- [ ] `src/lib/parquetDataFrame.ts`: implement `DataFrame` (`numRows`, `columnDescriptors`, `getCell`, `getRowNumber`, `fetch`, `eventTarget`) using `parquetReadObjects` per row-group chunk with `compressors` from `hyparquet-compressors`; cache resolved cells; dispatch `resolve` events; honour `AbortSignal`.
-- [ ] Wrap with `sortableDataFrame` from `hightable/dataframe`.
-- [ ] Tests: dataframe returns correct cells/ranges vs. `parquetReadObjects` on sample files; sorting works.
+- [x] `src/lib/source.ts` (`openParquetUrl`): file size from a 1-byte range request (`Range: bytes=0-0` → `Content-Range`), not HEAD – GitHub Pages returns the gzip-compressed size in HEAD `Content-Length` (verified with `curl` on a deployed SVG: 3954 vs. 9982 bytes). 206 → `asyncBufferFromUrl` + `cachedAsyncBuffer`; 200 (range ignored) → the probe response already holds the whole file. Range support verified on the Vite dev server (206 for parquet) and GitHub Pages (206 for SVG).
+- [x] `src/lib/dataset.ts`: `listDataSets()` from `import.meta.glob(..., { query: '?url', import: 'default', eager: true })` (names + URLs, sorted, no download); `loadDataSet(entry)` → `{ name, url, byteLength, metadata, df }`.
+- [x] `src/lib/parquetDataFrame.ts`: `DataFrame` with `parquetRead` + `onChunk` per chunk of ≤ 1000 rows within row group boundaries (`planChunks`); `compressors` from `hyparquet-compressors`; per chunk+column read de-duplication; failed reads are retried on next fetch; `resolve` events; `AbortSignal` checked before/after (hyparquet reads cannot be cancelled mid-way).
+- [x] Wrap with `sortableDataFrame` from `hightable/dataframe` (in `loadDataSet`).
+- [x] Tests: `planChunks`; every cell equals `parquetReadObjects`; only requested columns decoded; no duplicate reads; abort; retry; sorting; `loadDataSet` against a fake static server with and without range support.
 - [ ] (Later, optional) move decoding to a Web Worker if large files block the main thread.
+- [ ] After Phase 3 deploy: confirm in the browser that a parquet file on GitHub Pages loads via range requests.
 
 ### Phase 3 – Shell components
 - [ ] `ErrorBar`, `Dropdown`, `Json` (Solid, styles ported from needed parts of `hyperparam.css`, MIT).
@@ -284,8 +285,9 @@ Feature parity with HighTable 0.26.4 (features and props listed in `node_modules
 
 ## 7. Risks / open questions
 
-- Range-request support on the hosting target (GitHub Pages) and Vite dev server for `asyncBufferFromUrl` – verify; fallback exists.
+- Range requests: verified on the Vite dev server and GitHub Pages (SVG). Parquet on Pages to be confirmed after the Phase 3 deploy; fallback (whole file) exists.
+- Cell cache in `parquetDataFrame` is never evicted (same as the original); scrolling through a very large file eventually holds all fetched cells in memory.
 - `sortableDataFrame` sorts by fetching whole columns; on very large files the first sort is expensive – acceptable or needs worker?
-- D11: final production data source (bundled vs. external URL) – deferred; an external URL also needs CORS + range-request support on that server.
+- D11: final production data source (bundled vs. external URL) – deferred; an external URL also needs CORS + range-request support on that server, and must expose `Content-Range` (`Access-Control-Expose-Headers`) for the size probe in `source.ts`.
 - Not planned (not used by the current app): HighTable cell double-click handler, copy to clipboard. Add only on request.
 - TypeScript is held at 6.x: `typescript-eslint` 8.71.2 requires `typescript <6.1.0` (npm registry). Revisit when typescript-eslint supports TS 7.
