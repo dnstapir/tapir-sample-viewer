@@ -271,7 +271,8 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] CSS ported from HighTable (styled variant), incl. the hyparquet logo in the corner cell.
 - [x] Parity checked against the React app on the same file: identical headers, first 15 rows, rows after sorting by `label1`, `aria-sort`; column widths within 1–2 px.
 - [x] Tests: viewport math, column width rules/storage, and a component test (grid semantics, fetching, sort cycle, keyboard, hide/show, resize + persistence, fetch errors).
-- [ ] Row selection: **not enabled in the original app** – HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither. Open question whether it is wanted.
+- ~~Row selection~~ – **deferred** (decided 2026-10-16): not enabled in the original app (HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither), and nothing uses a selection yet. Revisit if a feature needs it, e.g. exporting selected rows.
+- [ ] Accessibility gaps found in review (WCAG 2.2 AA): column menu button is 20×20 px and the resize handle 8 px wide, below the 24×24 px target size (2.5.8); column resizing by pointer needs a single-pointer alternative to dragging (2.5.7) – keyboard alone does not satisfy it.
 
 Deviations from HighTable (accessibility):
 - No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
