@@ -101,6 +101,7 @@ Match the original ESLint config (ported to `eslint.config.js`):
 ## Testing
 
 - Vitest, tests in `test/*.test.ts`, environment `node` (set in `vite.config.ts`). Unit-test everything in `src/lib/` using the sample files in `src/parquets/`.
+- `test/samples.ts` (`loadSamples()`) reads the sample files' metadata from disk. Number formatting with `toLocaleString` is locale-dependent; build expected strings with `toLocaleString()` in tests.
 - Search: one test per row of the PLAN.md 4.2 example table, plus edge cases.
 - Component tests (optional) with `@solidjs/testing-library`; accessibility checks with `axe-core`.
 

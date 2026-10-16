@@ -221,10 +221,10 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Verify: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pass; `pnpm dev` serves the placeholder `App`; no `react` in `dist/`.
 
 ### Phase 1 – Pure logic (no UI) + tests
-- [ ] `src/lib/format.ts`: `formatFileSize`, cell value stringify (BigInt, Date, nested objects; consider `hightable/dataframe` `stringify`).
-- [ ] `src/lib/layout.ts`: `collectLayoutItems`, `getColumnRange`, layout item types.
-- [ ] `src/lib/grid.ts`: per-column totals/maxes, per-row-group compressed/uncompressed/page counts, tooltip text builders.
-- [ ] Unit tests for each against sample parquet metadata.
+- [x] `src/lib/format.ts`: `formatFileSize`. Cell values use `stringify` from `hightable/dataframe` directly (handles BigInt, Date as ISO, nested objects), so no own wrapper.
+- [x] `src/lib/layout.ts`: `collectLayoutItems`, `getColumnRange`, `columnPages` (moved out of the `Column` component), `metadataRange`, layout item types.
+- [x] `src/lib/grid.ts`: `gridColumns` (names, totals, maxes, grid template), `rowGroupStats`, `rowGroupTitle`, `columnCell`, `columnLabelTitle`.
+- [x] Unit tests: synthetic metadata for exact values + invariants on the sample files (`test/samples.ts` loads their metadata).
 
 ### Phase 2 – Data layer
 - [ ] `src/lib/source.ts`: build `AsyncBuffer` from asset URL via `asyncBufferFromUrl` + `cachedAsyncBuffer`; fallback to full `fetch().arrayBuffer()` if range requests are unsupported (verify Vite dev server and GitHub Pages behaviour).
