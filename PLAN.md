@@ -270,7 +270,8 @@ Feature parity with HighTable 0.26.4 (features and props listed in `node_modules
 - [ ] Wire into `Page`/`App`: query + scope signals, `createResource` for results, disable file selector in extended mode, empty-state hint.
 
 ### Phase 7 – CI / deploy
-- [ ] Port `.github/workflows/deploy.yaml` to pnpm (`pnpm/action-setup`, `pnpm install --frozen-lockfile`, `pnpm build`); Node 24.
+- [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.
+- [ ] Enable GitHub Pages in the repo (Settings → Pages → Source: GitHub Actions).
 - [ ] Add lint + test steps before build.
 - [ ] After build: fail if `dist/` contains React (e.g. `grep -rl 'react' dist/assets` must find nothing).
 
