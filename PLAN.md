@@ -271,7 +271,7 @@ Feature parity with HighTable 0.26.4 (features and props listed in `node_modules
 
 ### Phase 7 – CI / deploy
 - [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.
-- [ ] Enable GitHub Pages in the repo (Settings → Pages → Source: GitHub Actions).
+- [x] Enable GitHub Pages in the repo (Settings → Pages → Source: GitHub Actions).
 - [ ] Add lint + test steps before build.
 - [ ] After build: fail if `dist/` contains React (e.g. `grep -rl 'react' dist/assets` must find nothing).
 
