@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 export default defineConfig(
   { ignores: ['dist', 'coverage', 'node_modules'] },
   {
-    files: ['src/**/*.{ts,tsx}', 'test/**/*.ts'],
+    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
       ...tseslint.configs.strictTypeChecked,
@@ -29,7 +29,8 @@ export default defineConfig(
       'comma-dangle': ['error', 'always-multiline'],
       'eol-last': 'error',
       eqeqeq: 'error',
-      'func-style': ['error', 'declaration'],
+      // arrow functions are idiomatic for Solid derived signals: `const visible = () => ...`
+      'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
       indent: ['error', 2],
       'key-spacing': 'error',
       'no-constant-condition': 'off',

@@ -236,14 +236,19 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [ ] After Phase 3 deploy: confirm in the browser that a parquet file on GitHub Pages loads via range requests.
 
 ### Phase 3 – Shell components
-- [ ] `ErrorBar`, `Dropdown`, `Json` (Solid, styles ported from needed parts of `hyperparam.css`, MIT).
-- [ ] `Layout`: title via `onMount`, `ErrorBar`, optional progress bar.
-- [ ] `App`: dataset list signal, selected index signal, `createResource` loading the selected dataset; errors routed to `ErrorBar`.
-- [ ] `Page`: header with logo + file `<select>`, view header (size with byte tooltip, row count, lens dropdown; Layout option only when `byteLength` known), lens `<Switch>`; "No parquet files found" state.
-- [ ] `src/index.css`: port used rules only; fix `.logo-header`; drop dropzone/sidebar/welcome/quick-links/`.brand`.
+- [x] `ErrorBar`: always-present `role="alert"` region; close button; a new error object shows the bar again.
+- [x] `Dropdown`: APG menu button (`aria-haspopup`, `aria-expanded`, `aria-controls`; `menu`/`menuitem(radio)` with `aria-checked`; arrows/Home/End/Escape/Tab; focus returns to the button; outside click closes). Takes an `items` list instead of arbitrary children.
+- [x] `Json`: Solid port; toggles are `<button aria-expanded>` (disclosure pattern) instead of clickable `div role="treeitem"`, which had no keyboard support. Pure helpers in `src/lib/json.ts`.
+- [x] Decorative carets are `aria-hidden` spans; CSS `::before` text ended up in accessible names ("▼ View: Table").
+- [x] `Layout`: title via `onMount`, `ErrorBar`. Progress bar dropped (never used by the original `App`).
+- [x] `App`: `listDataSets()`, selected index signal, `createResource(loadDataSet)`; resource errors routed to `ErrorBar`.
+- [x] `Page`: `<h1>` with decorative logo (`alt=""`, the text follows), file `<select>`, size (bytes in `title`), row count, lens menu (accessible name "View: …"), lens `<Switch>`; placeholders for Table/Layout/Grid; "No parquet files found" and `role="status"` loading state. Layout lens always offered (size is always known now).
+- [x] `src/index.css`: original rules + needed parts of `hyperparam/global.css`; unused rules dropped (incl. the broken `logo-header` selector, which matched nothing). Visible `:focus-visible` outline (hyperparam removed button outlines). Grid label colour `#888` → `#666` (contrast 3.5:1 → 5.7:1). Long file names no longer push the `<select>` out of the header.
+- [x] Component tests (`@solidjs/testing-library` + `jsdom`, per file `// @vitest-environment jsdom`): ErrorBar, Dropdown keyboard/focus, Json.
+- [x] Verified in the browser (dev + `vite preview`): file switching, menu by mouse and keyboard, metadata tree, range requests (`bytes=0-0` → 206, then one range for small files).
 
 ### Phase 4 – Static lenses
-- [ ] `ParquetMetadata` (via `Json`).
+- [x] `ParquetMetadata` (via `Json`) – done in phase 3 to exercise `Json` in the browser; uses `<div>` instead of the original `<code>`, which cannot contain block elements.
 - [ ] `ParquetLayout` (recursive `Group`/`Cell`/`Column` with `<For>`/`<Show>`).
 - [ ] `ParquetGrid` (`style={{ 'grid-template-columns': … }}`, tooltips unchanged).
 

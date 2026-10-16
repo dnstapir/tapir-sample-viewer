@@ -13,7 +13,8 @@ export async function openParquetUrl(url: string): Promise<AsyncBuffer> {
   if (!res.ok) throw new Error(`fetch ${url} failed: ${res.status}`)
 
   if (res.status === 206) {
-    await res.body?.cancel()
+    // read the 1-byte body instead of cancelling, which shows up as a failed request in devtools
+    await res.arrayBuffer()
     const byteLength = Number(res.headers.get('Content-Range')?.split('/')[1])
     if (!Number.isFinite(byteLength)) throw new Error(`missing Content-Range for ${url}`)
     return cachedAsyncBuffer(await asyncBufferFromUrl({ url, byteLength }))

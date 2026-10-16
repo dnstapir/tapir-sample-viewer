@@ -94,7 +94,8 @@ Match the original ESLint config (ported to `eslint.config.js`):
 
 - TypeScript strict; typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`.
 - 2-space indent, single quotes, **no semicolons**, trailing commas on multiline, newline at EOF, no trailing spaces, max 1 empty line.
-- `func-style: declaration` – use `function` declarations for top-level functions and components.
+- `func-style: declaration` – use `function` declarations for top-level functions and components. Arrow functions are allowed for Solid derived signals (`const visible = () => …`).
+- Refs: use callback refs (`ref={el => { button = el }}`); ESLint's `no-unassigned-vars` does not understand `ref={button}`.
 - `object-curly-spacing: always`, `eqeqeq`, `prefer-const`, sorted import members.
 - Comments only where code cannot explain itself; one short line.
 
@@ -103,7 +104,8 @@ Match the original ESLint config (ported to `eslint.config.js`):
 - Vitest, tests in `test/*.test.ts`, environment `node` (set in `vite.config.ts`). Unit-test everything in `src/lib/` using the sample files in `src/parquets/`.
 - `test/samples.ts` (`loadSamples()`) reads the sample files' metadata from disk. Number formatting with `toLocaleString` is locale-dependent; build expected strings with `toLocaleString()` in tests.
 - Search: one test per row of the PLAN.md 4.2 example table, plus edge cases.
-- Component tests (optional) with `@solidjs/testing-library`; accessibility checks with `axe-core`.
+- Component tests: `test/*.test.tsx` with `@solidjs/testing-library`; put `// @vitest-environment jsdom` on the first line. Query by role and accessible name. Accessibility checks with `axe-core` (phase 8).
+- Avoid test file names that differ only in case (`Json.test.tsx` vs `json.test.ts`); macOS is case-insensitive and the TypeScript project service rejects the pair.
 
 ## Deployment
 
