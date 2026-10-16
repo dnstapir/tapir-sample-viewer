@@ -1,0 +1,9 @@
+allowBuilds:
+  esbuild: true
+
+# hightable declares react/react-dom as peers; only its React-free `hightable/dataframe` subpath is used.
+autoInstallPeers: false
+peerDependencyRules:
+  ignoreMissing:
+    - react
+    - react-dom
