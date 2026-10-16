@@ -249,8 +249,10 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 
 ### Phase 4 – Static lenses
 - [x] `ParquetMetadata` (via `Json`) – done in phase 3 to exercise `Json` in the browser; uses `<div>` instead of the original `<code>`, which cannot contain block elements.
-- [ ] `ParquetLayout` (recursive `Group`/`Cell`/`Column` with `<For>`/`<Show>`).
-- [ ] `ParquetGrid` (`style={{ 'grid-template-columns': … }}`, tooltips unchanged).
+- [x] `ParquetLayout`: `Group`/`Cell`/`Column` with `<For>`/`<Show>`/`<Switch>` on top of `src/lib/layout.ts`. Names are `<span>` instead of `<label>` (no form controls); groups are `role="group"` labelled by their name.
+- [x] `ParquetGrid`: same bars and `title` tooltips on top of `src/lib/grid.ts`. Tooltips are mouse-only, so the visual grid is `aria-hidden` and a `<details>` "Show as table" offers the numbers as a data table (caption, column/row headers, totals) for keyboard and screen-reader users (4.3).
+- [x] Parity checked against the running React app on the same file: layout text identical, all 55 grid tooltips identical, bar widths identical.
+- [x] Component tests: layout structure and group names; grid `aria-hidden` + table headers/values/totals.
 
 ### Phase 5 – Table
 Feature parity with HighTable 0.26.4 (features and props listed in `node_modules/hightable/README.md`; check behaviour in the running React app before implementing each item):

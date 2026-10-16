@@ -1,6 +1,8 @@
 import type { JSX } from 'solid-js'
 import { For, Match, Show, Switch, createSignal } from 'solid-js'
 import Dropdown from './components/Dropdown.tsx'
+import ParquetGrid from './lenses/ParquetGrid.tsx'
+import ParquetLayout from './lenses/ParquetLayout.tsx'
 import ParquetMetadata from './lenses/ParquetMetadata.tsx'
 import type { DataSet, DataSetEntry } from './lib/dataset.ts'
 import { formatFileSize } from './lib/format.ts'
@@ -59,10 +61,10 @@ export default function Page(props: PageProps): JSX.Element {
             <ParquetMetadata metadata={dataSet().metadata} />
           </Match>
           <Match when={lens() === 'layout'}>
-            <p class="placeholder">The layout view is being ported (phase 4).</p>
+            <ParquetLayout byteLength={dataSet().byteLength} metadata={dataSet().metadata} />
           </Match>
           <Match when={lens() === 'grid'}>
-            <p class="placeholder">The grid view is being ported (phase 4).</p>
+            <ParquetGrid metadata={dataSet().metadata} />
           </Match>
         </Switch>
       </>}

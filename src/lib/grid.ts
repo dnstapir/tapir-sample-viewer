@@ -22,6 +22,8 @@ export interface RowGroupStats {
 export interface ColumnCell {
   name: string
   title: string
+  /** compressed bytes of the column chunk */
+  bytes: number
   /** bar width relative to the largest chunk of the same column */
   widthPercent: number
 }
@@ -101,6 +103,7 @@ export function columnCell(rowGroupIndex: number, rowGroup: RowGroup, columnInde
   return {
     name,
     title,
+    bytes: size,
     widthPercent: columnMax > 0 ? size / columnMax * 100 : 0,
   }
 }

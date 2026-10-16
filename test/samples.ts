@@ -24,7 +24,11 @@ export function loadSamples(): Promise<Sample[]> {
   return Promise.all(samplePaths.map(async relative => {
     const path = new URL(relative, import.meta.url).pathname
     const file = await asyncBufferFromFile(path)
-    const metadata = await parquetMetadataAsync(file)
+    // copy into this realm's ArrayBuffer: under jsdom, hyparquet's `instanceof ArrayBuffer` rejects Node's buffers
+    const metadata = await parquetMetadataAsync({
+      byteLength: file.byteLength,
+      slice: async (start, end) => new Uint8Array(await file.slice(start, end)).slice().buffer,
+    })
     const name = relative.split('/').pop() ?? relative
     return { name, path, byteLength: file.byteLength, metadata }
   }))
