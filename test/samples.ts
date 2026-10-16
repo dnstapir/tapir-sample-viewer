@@ -15,8 +15,12 @@ const samplePaths = Object.keys(import.meta.glob('../src/parquets/*.parquet'))
 
 /**
  * Metadata of every bundled sample parquet file, read from disk.
+ * Throws if none are found, so sample-based tests cannot pass vacuously.
  */
 export function loadSamples(): Promise<Sample[]> {
+  if (samplePaths.length === 0) {
+    return Promise.reject(new Error('no sample parquet files found in src/parquets/'))
+  }
   return Promise.all(samplePaths.map(async relative => {
     const path = new URL(relative, import.meta.url).pathname
     const file = await asyncBufferFromFile(path)

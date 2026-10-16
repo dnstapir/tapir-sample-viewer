@@ -1,5 +1,5 @@
 /**
- * Human-readable file size, e.g. `16.3 kb`.
+ * Converts bytes to a rounded size with unit, e.g. `1.5 mb` or `16 kb`.
  */
 export function formatFileSize(bytes: number): string {
   const sizes = ['b', 'kb', 'mb', 'gb', 'tb']

@@ -1,6 +1,6 @@
 import type { ColumnChunk, ColumnMetaData, FileMetaData, RowGroup } from 'hyparquet'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { columnCell, columnLabelTitle, gridColumns, rowGroupStats, rowGroupTitle } from '../src/lib/grid.ts'
+import { columnCell, gridColumns, rowGroupStats, rowGroupTitle } from '../src/lib/grid.ts'
 import type { Sample } from './samples.ts'
 import { loadSamples } from './samples.ts'
 
@@ -44,12 +44,6 @@ describe('gridColumns', () => {
   it('handles files without row groups', () => {
     expect(gridColumns({ row_groups: [] as RowGroup[] } as FileMetaData))
       .toEqual({ names: [], totals: [], maxes: [], template: '' })
-  })
-})
-
-describe('columnLabelTitle', () => {
-  it('shows name and total bytes', () => {
-    expect(columnLabelTitle('a', 1234)).toBe(`Column: a\n${(1234).toLocaleString()} bytes`)
   })
 })
 

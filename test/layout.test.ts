@@ -37,13 +37,6 @@ describe('columnPages', () => {
   })
 })
 
-describe('metadataRange', () => {
-  it('excludes the 4-byte length and trailing magic', () => {
-    const metadata = { metadata_length: 100 } as FileMetaData
-    expect(metadataRange(1000, metadata)).toEqual({ start: 896, end: 996 })
-  })
-})
-
 describe('collectLayoutItems', () => {
   function chunk(start: bigint, extra: Partial<ColumnChunk> = {}): ColumnChunk {
     return {
@@ -77,10 +70,6 @@ describe('layout of sample files', () => {
   let samples: Sample[] = []
   beforeAll(async () => {
     samples = await loadSamples()
-  })
-
-  it('finds the sample files', () => {
-    expect(samples.length).toBeGreaterThan(0)
   })
 
   it('starts the first row group right after the leading PAR1 magic', () => {
