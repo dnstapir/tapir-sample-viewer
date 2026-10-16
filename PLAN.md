@@ -272,14 +272,13 @@ Feature parity with HighTable 0.26.4 (features and props listed in `node_modules
 ### Phase 7 – CI / deploy
 - [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.
 - [x] Enable GitHub Pages in the repo (Settings → Pages → Source: GitHub Actions).
-- [ ] Add lint + test steps before build.
-- [ ] After build: fail if `dist/` contains React (e.g. `grep -rl 'react' dist/assets` must find nothing).
+- [x] Add lint + test steps before build.
+- [x] After build: fail if `dist/` contains React (grep for React's JSX-runtime marker `react.element` / `react.transitional.element`).
 
 ### Phase 8 – Verification & cleanup
 - [ ] Side-by-side check against the React app for every lens and every sample file.
 - [ ] Test with a large generated parquet file (100k+ rows, multiple row groups): first paint time, scroll, sort, memory.
 - [ ] Search on the large file and in Extended search across all sample files: correctness, scan time, abort.
-- [ ] Confirm bundle contains no `react`/`react-dom` (`grep` built `dist/`).
 - [ ] Accessibility: `axe-core` checks pass; keyboard-only and VoiceOver walkthrough of table, search and lenses.
 - [ ] Update `README.md` (pnpm commands, Solid).
 
