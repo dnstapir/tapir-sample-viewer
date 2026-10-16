@@ -233,7 +233,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Wrap with `sortableDataFrame` from `hightable/dataframe` (in `loadDataSet`).
 - [x] Tests: `planChunks`; every cell equals `parquetReadObjects`; only requested columns decoded; no duplicate reads; abort; retry; sorting; `loadDataSet` against a fake static server with and without range support.
 - [ ] (Later, optional) move decoding to a Web Worker if large files block the main thread.
-- [ ] After Phase 3 deploy: confirm in the browser that a parquet file on GitHub Pages loads via range requests.
+- [x] After Phase 3 deploy: confirmed in the browser that a parquet file on GitHub Pages loads via range requests (`bytes=0-0` → 206, `Content-Range: …/16283`, then one range). Pages gzips `.parquet` (`application/octet-stream`) when gzip is accepted, and then even ranges refer to the compressed bytes; browsers avoid this because the Fetch standard adds `Accept-Encoding: identity` to requests with a `Range` header. A HEAD request has no `Range`, so its size would still be the compressed one – the reason for the probe in `source.ts`.
 
 ### Phase 3 – Shell components
 - [x] `ErrorBar`: always-present `role="alert"` region; close button; a new error object shows the bar again.
