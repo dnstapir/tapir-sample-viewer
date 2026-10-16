@@ -58,7 +58,7 @@ src/
   Page.tsx             # header, file select, lens switch
   components/          # Dropdown, ErrorBar, Json (Solid replacements for hyperparam)
   lenses/              # ParquetMetadata, ParquetLayout, ParquetGrid
-  table/               # virtualized sortable table (@tanstack/solid-virtual)
+  table/               # virtualized sortable data grid (own windowing, see src/lib/viewport.ts)
   search/              # SearchBar, SearchHelp
   lib/                 # pure TS: format, layout, grid, source, dataset, parquetDataFrame,
                        #          search, searchScan, filteredDataFrame, concatDataFrame

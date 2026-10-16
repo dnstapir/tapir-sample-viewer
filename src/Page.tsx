@@ -6,6 +6,7 @@ import ParquetLayout from './lenses/ParquetLayout.tsx'
 import ParquetMetadata from './lenses/ParquetMetadata.tsx'
 import type { DataSet, DataSetEntry } from './lib/dataset.ts'
 import { formatFileSize } from './lib/format.ts'
+import Table from './table/Table.tsx'
 
 type Lens = 'table' | 'metadata' | 'layout' | 'grid'
 
@@ -18,6 +19,7 @@ interface PageProps {
   onSelect: (index: number) => void
   dataSet?: DataSet
   loading: boolean
+  onError: (error: unknown) => void
 }
 
 /**
@@ -55,7 +57,10 @@ export default function Page(props: PageProps): JSX.Element {
         </div>
         <Switch>
           <Match when={lens() === 'table'}>
-            <p class="placeholder">The table view is being ported (phase 5).</p>
+            {/* keyed: a new data set gets a fresh table (scroll, sort, focus) */}
+            <Show when={dataSet()} keyed>
+              {current => <Table df={current.df} name={current.name} onError={props.onError} />}
+            </Show>
           </Match>
           <Match when={lens() === 'metadata'}>
             <ParquetMetadata metadata={dataSet().metadata} />

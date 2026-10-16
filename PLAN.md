@@ -82,6 +82,8 @@ Requirement driver: files may reach 100k+ rows and several row groups.
 - `@tanstack/solid-virtual` is headless and Solid-native (peer `solid-js ^1.3.0`, v3.13.47 on npm), so rendering stays fully under our control and styling can reuse HighTable-like CSS.
 - B becomes preferable only if built-in filtering/grouping matters more than large-file performance.
 
+**Amendment (phase 5):** rows have a fixed height (33px, as in HighTable), so windowing is plain arithmetic in `src/lib/viewport.ts` instead of `@tanstack/solid-virtual` (dependency removed). This also allows capping the canvas at 8M px with proportional scroll mapping, like HighTable; a fixed-height list library would exceed browser element-height limits above ~240k rows.
+
 Sources: npm registry (`@tanstack/solid-virtual/latest` 3.13.47, `@tanstack/solid-table/latest` 9.3.1, `solid-js/latest` 1.9.17, `vite-plugin-solid/latest` 2.11.14 with peer `vite ^…^8 || ^9`), checked 2026-10-16; local `node_modules` of `tapir-hyparquet`.
 
 ### 4.2 D8 – search specification
@@ -208,7 +210,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Flatten `tapir-hyparquet-solid/tapir-hyparquet-solid/*` into `tapir-hyparquet-solid/`; remove the empty inner folder.
 - [x] `git init`; keep template `.gitignore`.
 - [x] `package.json`: name `tapir-hyparquet-solid`, `version` 0.1.0, `license: MIT`, `private: true`; scripts `dev`, `build` (`tsc && vite build`), `preview`, `lint`, `test`, `typecheck`.
-- [x] Dependencies (caret ranges): `solid-js`, `hyparquet`, `hyparquet-compressors`, `hightable` (dataframe subpath only), `@tanstack/solid-virtual`.
+- [x] Dependencies (caret ranges): `solid-js`, `hyparquet`, `hyparquet-compressors`, `hightable` (dataframe subpath only). (`@tanstack/solid-virtual` removed in phase 5, see D4 amendment.)
 - [x] Dev deps: `vite` 8, `vite-plugin-solid`, `typescript` 6, `vitest`, `eslint` 10, `@eslint/js`, `typescript-eslint`, `eslint-plugin-solid`, `globals`. `@solidjs/testing-library` deferred until component tests are added.
 - [x] `solid-devtools` removed: its peer range is `vite` ≤ 7 (npm registry, 0.34.5). Vite 8 kept (current supported line, same major as the original); re-add devtools when it supports Vite 8.
 - [x] `pnpm-workspace.yaml`: `autoInstallPeers: false` + `peerDependencyRules.ignoreMissing: [react, react-dom]` so `hightable`'s React peers are not installed.
@@ -255,18 +257,26 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Component tests: layout structure and group names; grid `aria-hidden` + table headers/values/totals.
 
 ### Phase 5 – Table
-Feature parity with HighTable 0.26.4 (features and props listed in `node_modules/hightable/README.md`; check behaviour in the running React app before implementing each item):
-- [ ] Virtualized rows via `createVirtualizer`; `df.fetch` for visible range + overscan (with abort on scroll); re-render on `resolve` events.
-- [ ] Per-cell loading placeholder.
-- [ ] Sticky header + row-number column.
-- [ ] Sorting: click header → `OrderBy` (`toggleColumn` from `hightable/dataframe`), pass to `getCell`/`fetch`.
-- [ ] Column resizing + auto-sizing; widths persisted per dataset (replaces `cacheKey`).
-- [ ] Column visibility (show/hide columns).
-- [ ] Row selection: click, shift+click ranges, multiple ranges.
-- [ ] Keyboard navigation (see 4.3).
-- [ ] Reset scroll/sort/selection when dataset changes.
-- [ ] Port relevant HighTable CSS; keep `.hightable thead td:first-child` logo rule.
-- [ ] Accessibility requirements from 4.3.
+Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_modules/hightable/dist/HighTable.js.map` and checked in the running React app):
+- [x] Virtualized rows: `src/lib/viewport.ts` (fixed 33px rows, 20 rows overscan, canvas capped at 8M px with proportional scroll); `df.fetch` for the rendered range, aborted when the range, columns or sort change; re-render on `resolve`/`update` events.
+- [x] Per-cell loading placeholder (shimmer, disabled with `prefers-reduced-motion`) plus visually hidden "Loading" text and `aria-busy`.
+- [x] Sticky header, corner and row-number column; 1-based original row numbers.
+- [x] Sorting: click or Enter/Space on a header → `toggleColumn` (ascending → descending → none, multi-column); indicator; `aria-sort` on the primary column.
+- [x] Column widths (`src/lib/columnWidths.ts`): measured when data arrives, adjusted to fit the viewport (HighTable's algorithm), user widths persisted in `localStorage` per data set; resize by pointer drag or keyboard; double-click / Enter auto-sizes.
+- [x] Column menu (⋮, `Dropdown` rendered in a portal): sort order, hide column, show all columns.
+- [x] Keyboard navigation: one tab stop (roving `tabindex`), arrows, Ctrl+arrows, Home/End, Ctrl+Home/End, PageUp/PageDown (20 rows); Enter/Space/Tab on the scroll area enters the grid.
+- [x] Copy: Ctrl/Cmd+C on a focused cell copies its text (HighTable feature; the earlier "not planned" note was wrong).
+- [x] Long values (> 100 characters) get a tooltip.
+- [x] Fresh table per data set (scroll, sort, focus, hidden columns reset); `Page` renders it keyed by data set.
+- [x] CSS ported from HighTable (styled variant), incl. the hyparquet logo in the corner cell.
+- [x] Parity checked against the React app on the same file: identical headers, first 15 rows, rows after sorting by `label1`, `aria-sort`; column widths within 1–2 px.
+- [x] Tests: viewport math, column width rules/storage, and a component test (grid semantics, fetching, sort cycle, keyboard, hide/show, resize + persistence, fetch errors).
+- [ ] Row selection: **not enabled in the original app** – HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither. Open question whether it is wanted.
+
+Deviations from HighTable (accessibility):
+- No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
+- Data cells are `role="gridcell"` (HighTable: `cell`, invalid inside `grid`); `aria-sort` only on the primary sort column.
+- Resize handle is a focusable `separator` (APG window splitter) instead of a `spinbutton`.
 
 ### Phase 6 – Search (D8)
 - [ ] `src/lib/search.ts`: normalise + parse query → `{ substring: { label, value }, exact: { label, value }[] }`; `matches(row)`; unit tests for every row of the 4.2 table and the edge cases (trailing dot, uppercase, > 5 labels, empty).
@@ -296,5 +306,6 @@ Feature parity with HighTable 0.26.4 (features and props listed in `node_modules
 - Cell cache in `parquetDataFrame` is never evicted (same as the original); scrolling through a very large file eventually holds all fetched cells in memory.
 - `sortableDataFrame` sorts by fetching whole columns; on very large files the first sort is expensive – acceptable or needs worker?
 - D11: final production data source (bundled vs. external URL) – deferred; an external URL also needs CORS + range-request support on that server, and must expose `Content-Range` (`Access-Control-Expose-Headers`) for the size probe in `source.ts`.
-- Not planned (not used by the current app): HighTable cell double-click handler, copy to clipboard. Add only on request.
+- Not planned (not used by the current app): HighTable cell double-click handler. Add only on request.
+- The corner cell loads the hyparquet logo from `hyperparam.app` (as the original): a third-party request on every page load.
 - TypeScript is held at 6.x: `typescript-eslint` 8.71.2 requires `typescript <6.1.0` (npm registry). Revisit when typescript-eslint supports TS 7.

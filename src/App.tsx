@@ -26,6 +26,7 @@ export default function App(): JSX.Element {
       // reading a resource in the error state throws, so only read it when ready
       dataSet={dataSet.state === 'ready' ? dataSet() : undefined}
       loading={dataSet.loading}
+      onError={error => setError(toError(error))}
     />
   </Layout>
 }
