@@ -176,6 +176,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - Lens dropdown follows the APG menu button pattern (or uses a native `<select>`).
 - `ParquetGrid` / `ParquetLayout` information currently only in `title` tooltips must also be available to keyboard and screen-reader users.
 - Visible focus indicator everywhere; text contrast ≥ 4.5:1 (check grid/layout colours and dark header).
+- Pointer targets ≥ 24×24 CSS px, or no other target within a 24 px circle around an undersized one; targets inside another clickable element always need the full size ([Understanding 2.5.8](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)).
 - `ErrorBar` uses `role="alert"`.
 - `<html lang="en">`, meaningful page title, logo `alt`.
 
@@ -272,12 +273,14 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Parity checked against the React app on the same file: identical headers, first 15 rows, rows after sorting by `label1`, `aria-sort`; column widths within 1–2 px.
 - [x] Tests: viewport math, column width rules/storage, and a component test (grid semantics, fetching, sort cycle, keyboard, hide/show, resize + persistence, fetch errors).
 - ~~Row selection~~ – **deferred** (decided 2026-10-16): not enabled in the original app (HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither), and nothing uses a selection yet. Revisit if a feature needs it, e.g. exporting selected rows.
-- [ ] Accessibility gaps found in review (WCAG 2.2 AA): column menu button is 20×20 px and the resize handle 8 px wide, below the 24×24 px target size (2.5.8); column resizing by pointer needs a single-pointer alternative to dragging (2.5.7) – keyboard alone does not satisfy it.
+- [x] Target size (WCAG 2.5.8, fixed 2026-10-16): column menu button 20×20 → 24×24 px, resize handle hit area 8 → 24 px wide (visible line still 4 px). Both sit inside the clickable header, so the spacing exception cannot apply. Header `padding-right` grows from `10px + 2.5rem` (50 px) to `48px + 1rem` (64 px), so auto-measured columns are 14 px wider than in the original. The same review found JSON toggles in the Metadata lens on adjacent lines too close for the spacing exception; they now have `min-height`/`min-width: 24px`. Checked in the browser: every target in all lenses is ≥ 24×24 or passes the spacing exception (file `<select>` 21 px high and lens button 17 px high pass by spacing).
+- [ ] Dragging alternative (WCAG 2.5.7) – moved to [Open decisions](#open-decisions--after-phase-8).
 
 Deviations from HighTable (accessibility):
 - No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
 - Data cells are `role="gridcell"` (HighTable: `cell`, invalid inside `grid`); `aria-sort` only on the primary sort column.
 - Resize handle is a focusable `separator` (APG window splitter) instead of a `spinbutton`.
+- Menu button 24×24 px and resize hit area 24 px wide (HighTable: 20×20 and 8 px), see 2.5.8 above.
 
 ### Phase 6 – Search (D8)
 - [ ] `src/lib/search.ts`: normalise + parse query → `{ substring: { label, value }, exact: { label, value }[] }`; `matches(row)`; unit tests for every row of the 4.2 table and the edge cases (trailing dot, uppercase, > 5 labels, empty).
@@ -300,6 +303,10 @@ Deviations from HighTable (accessibility):
 - [ ] Search on the large file and in Extended search across all sample files: correctness, scan time, abort.
 - [ ] Accessibility: `axe-core` checks pass; keyboard-only and VoiceOver walkthrough of table, search and lenses.
 - [ ] Update `README.md` (pnpm commands, Solid).
+
+### Open decisions – after Phase 8
+Need a decision from the client; implement together with any changes that come out of Phase 8.
+- [ ] **WCAG 2.5.7 Dragging Movements** (AA): column width can only be changed by pointer through dragging the resize handle. The keyboard alternative does not count; a single-pointer alternative is required ([Understanding 2.5.7](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html)). The same gap exists in HighTable and in the original app. Options: (a) column menu items "Wider" / "Narrower" (±10 or ±100 px) and "Fit to content"; (b) a width number input in the column menu; (c) both. Until then this is a known non-conformance.
 
 ## 7. Risks / open questions
 

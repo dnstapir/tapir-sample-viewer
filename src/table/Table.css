@@ -76,7 +76,8 @@
   border-bottom: 2px solid #ccc;
   color: #444;
   cursor: pointer;
-  padding-right: calc(10px + 2.5rem);
+  /* room for sort indicator, menu button and resize handle (24px each, WCAG 2.5.8) */
+  padding-right: calc(48px + 1rem);
   position: sticky;
   top: 0;
   z-index: var(--header-z);
@@ -94,18 +95,19 @@
 .table .sort-indicator {
   color: #bbb;
   position: absolute;
-  right: calc(10px + 1rem);
+  right: 48px;
   text-align: center;
   top: 50%;
   transform: translateY(-50%);
-  width: 2rem;
+  width: 1rem;
 }
 .table th[data-order-index="0"] .sort-indicator {
   color: inherit;
 }
 .table thead .dropdown {
+  display: flex;
   position: absolute;
-  right: 6px;
+  right: 24px;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -117,12 +119,12 @@
   color: #444;
   display: inline-flex;
   font-weight: 700;
-  height: 20px;
+  height: 24px;
   justify-content: center;
   opacity: 0;
   padding: 0;
   transition: opacity 0.2s ease;
-  width: 20px;
+  width: 24px;
 }
 .table thead th:hover .column-menu-button,
 .table .column-menu-button:focus-visible,
@@ -137,7 +139,8 @@
   position: absolute;
   right: 0;
   top: 1px;
-  width: 8px;
+  /* wide hit area, thin visible line (WCAG 2.5.8) */
+  width: 24px;
   z-index: calc(var(--header-z) + 1);
 }
 .table .column-resizer:hover,
