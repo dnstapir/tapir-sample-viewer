@@ -10,8 +10,8 @@ export interface Sample {
   metadata: FileMetaData
 }
 
-// glob keys only; the parquet modules are never imported
-const samplePaths = Object.keys(import.meta.glob('../src/parquets/*.parquet'))
+// glob keys only; the parquet modules are never imported. Generated large files are not samples.
+const samplePaths = Object.keys(import.meta.glob(['../src/parquets/*.parquet', '!../src/parquets/large-*.parquet']))
 
 /**
  * Reads a file from disk. Bytes are copied into this realm's ArrayBuffer:

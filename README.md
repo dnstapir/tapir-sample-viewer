@@ -1,36 +1,49 @@
-## Usage
+# DNS Tapir parquet viewer (Solid)
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+Browser viewer for DNS Tapir parquet files, built with [SolidJS](https://www.solidjs.com/) and [hyparquet](https://github.com/hyparam/hyparquet). It replaces the React app `tapir-hyparquet`; no React is shipped (CI checks the build).
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely removed once you clone a template.
+Live: https://little-mry.github.io/tapir-hyparquet-parser/
+
+## Features
+
+- **Table**: virtualized, lazily loaded grid (only visible rows are rendered; row groups are read on demand with HTTP range requests). Sort by clicking a header (multi-column; the *Row number* header resets to file order), hide/show and resize columns (widths are remembered per file), keyboard navigation, copy a cell with Ctrl/Cmd+C.
+- **Search**: *Domain* mode follows the DNS structure (`svt`, `svt.se`, `www.svt.se`); *Columns* mode searches the chosen `label0`–`label9` columns. *Extended search* searches all files. Options take effect when you press Search or Enter. The (i) button explains the rules.
+- **Metadata**, **Layout** and **Grid** views of the parquet file structure.
+- Built to WCAG 2.2 AA (EU accessibility requirements, EN 301 549); see `PLAN.md` section 4.3.
+
+## Requirements
+
+- Node.js 24
+- pnpm 11 (`npm install -g pnpm@11`)
+
+## Commands
 
 ```bash
-$ npm install # or pnpm install or yarn install
+pnpm install          # install dependencies (CI uses --frozen-lockfile)
+pnpm dev              # development server, http://localhost:5173
+pnpm lint             # ESLint
+pnpm typecheck        # TypeScript
+pnpm test             # Vitest (unit, component and axe-core accessibility tests)
+pnpm build            # type check + production build into dist/
+pnpm preview          # serve dist/ locally
+pnpm generate:large   # write a large test file (200,000 rows) to src/parquets/, see below
 ```
 
-### Learn more on the [Solid Website](https://www.solidjs.com/) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Data
 
-## Available Scripts
+The parquet files in `src/parquets/` are bundled with the app. All file access goes through `src/lib/dataset.ts` and `src/lib/source.ts`, so the data source can be changed later.
 
-In the project directory, you can run:
-
-### `npm run dev` or `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+`pnpm generate:large [rows]` creates `src/parquets/large-<rows>.parquet` from the sample rows, for testing large files locally. It is gitignored and not used by the tests, so CI never builds or deploys it; a local `pnpm build` does include it while the file exists.
 
 ## Deployment
 
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+Pushing to `main` runs `.github/workflows/deploy.yaml`: install, lint, test, build, check that `dist/` contains no React, and deploy `dist/` to GitHub Pages. The build uses relative paths (`base: './'`), so it works from any sub-path or static host.
 
-## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
+## Project docs
+
+- `PLAN.md` – migration plan, decisions, phases and findings
+- `AGENTS.md` – conventions for contributors and coding agents
+
+## License
+
+MIT, see `LICENSE`. Parts of the table and JSON viewer are ported from [HighTable](https://github.com/hyparam/hightable) and [hyperparam](https://github.com/hyparam/hyperparam-cli) (MIT).

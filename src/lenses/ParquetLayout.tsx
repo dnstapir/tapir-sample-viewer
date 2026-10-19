@@ -17,7 +17,8 @@ export default function ParquetLayout(props: LayoutProps): JSX.Element {
   const items = createMemo(() => collectLayoutItems(props.metadata))
   const footer = createMemo(() => metadataRange(props.byteLength, props.metadata))
 
-  return <div class="viewer">
+  // focusable so keyboard users can scroll it (it has no focusable content)
+  return <div class="viewer" tabIndex={0} role="region" aria-label="File layout">
     <div class="layout">
       <Cell name="PAR1" start={0} end={4} class="magic" />
       <For each={items()}>

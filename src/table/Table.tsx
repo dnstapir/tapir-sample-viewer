@@ -280,7 +280,6 @@ export default function Table(props: TableProps): JSX.Element {
                 scope="col"
                 role="columnheader"
                 aria-colindex={1}
-                aria-label="Row number"
                 aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
                 title={orderBy().length === 0 ? 'Sorted by row number (file order)' : 'Press to reset sorting to row number (file order)'}
                 tabIndex={tabIndexFor(1, 1)}
@@ -294,6 +293,7 @@ export default function Table(props: TableProps): JSX.Element {
                   }
                 }}
               >
+                <span class="visually-hidden">Row number</span>
                 <span aria-hidden="true">{orderBy().length === 0 ? '\u2b61' : '\u21c5'}</span>
               </th>
               <For each={columns()}>

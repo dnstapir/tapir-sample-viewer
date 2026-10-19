@@ -322,16 +322,44 @@ Findings:
 - [x] After build: fail if `dist/` contains React (grep for React's JSX-runtime marker `react.element` / `react.transitional.element`).
 
 ### Phase 8 – Verification & cleanup
-- [ ] Side-by-side check against the React app for every lens and every sample file.
-- [ ] Test with a large generated parquet file (100k+ rows, multiple row groups): first paint time, scroll, sort, memory.
-- [ ] Search on the large file and in Extended search across all sample files: correctness, scan time, abort.
-- [ ] Accessibility: `axe-core` checks pass; keyboard-only and VoiceOver walkthrough of table, search and lenses.
-- [ ] Update `README.md` (pnpm commands, Solid).
+- [x] Side-by-side check against the React app for every lens and every sample file (2026-10-19): view header, first 12 table rows, Metadata text, Layout text and Grid tooltips identical for all 5 files. One difference found and fixed: collapsed JSON previews showed fewer entries, because the toggle button sized to its content while the preview sizes itself to the button (`.json-toggle` now `width: 100%`). (The React app's dev server logs "Do not know how to serialize a BigInt" from React's dev profiler and sometimes ignores file changes; not our code.)
+- [x] Large file (`pnpm generate:large`, 200,000 rows, 4 row groups of 50,000, 149 kB; dev server, Chrome): first rows 0.6 s after selecting the file; 32 rows in the DOM; scroll to middle 1.1 s and to the end 0.4 s until all cells loaded; first sort on `label1` 2.0 s (whole column read); JS heap 275 MB after scroll + sort.
+- [x] Search on the large file: `office` → 8,724 rows in 49 ms. Extended search over all 6 files: 1.5 s with "Searching file N of 6…" progress. Two quick submits: the first is aborted, only the second result is shown, no error.
+- [x] Accessibility, automated: `test/a11y.test.tsx` runs axe-core (WCAG 2.0–2.2 A/AA tags) on the Table (with data, column menu open), search (Columns mode, validation) and the Metadata/Layout/Grid lenses, plus a check that axe does report a planted violation. In the browser (with colour contrast and best-practice rules) the same states and an Extended search result have **0 violations** after these fixes:
+  - `scrollable-region-focusable` (serious, 2.1.1): the Layout view and the Grid table wrapper scroll but had nothing focusable → `tabindex="0"`, `role="region"` and a name.
+  - `empty-table-header`: the Row number header was named only by `aria-label` → visually hidden text.
+  - `region`: the column menu portal was outside the `main` landmark → mounted inside it.
+  - `aria-controls` pointed at a menu that does not exist while closed → only set while open.
+  - Remaining "incomplete" (needs review): contrast of the sort arrows and the dropdown caret (non-text characters), and the help popover text (#222 on white, ≈ 16:1).
+- [ ] Accessibility, manual: keyboard-only and VoiceOver walkthrough – checklist below, done by the client.
+- [x] Update `README.md` (pnpm commands, Solid, features, data, deployment).
+- ResizeObserver "loop completed with undelivered notifications" (seen once on 2026-10-16) was not reproduced on 2026-10-19 while switching lenses and resizing. Per [MDN](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors) it means a resize was deferred to the next frame; it is harmless unless it repeats. Likely source: the JSON preview feedback loop fixed above.
+
+#### Manual checklist (keyboard + VoiceOver, Safari on macOS)
+Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-only, VO+arrows to read.
+1. **Start**: page title "DNS Tapir hyparquet" is read; VO+U (rotor) lists the heading "DNS Tapir", the landmarks main and search.
+2. **File selector**: Tab reaches "Parquet file, pop-up button"; changing file does not move focus; the table shows the new file.
+3. **Search form**: Tab order is search field → Search → Search help → Domain/Columns → Extended search. Each is read with its label.
+4. **Validation**: type `a`, Enter → "Enter at least 2 characters." is announced; the field is read as invalid.
+5. **Columns**: choose Columns → the label0–label9 checkboxes appear in a group "Columns"; uncheck label1 → "Choose at least one column to search." is announced.
+6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; on the Search button VoiceOver reads "Options changed – press Search to update."
+7. **Result**: search `office` → "2 matching rows" (or similar) is announced without moving focus.
+8. **Help**: activate "Search help" → the help text opens and can be read with VO+arrows; Esc closes it and focus stays on the button.
+9. **Table, entering**: Tab to the table area, then Enter (or Tab) → focus on the "Row number" header; arrows move cell by cell; VoiceOver reads row/column position and header names.
+10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible.
+11. **Sorting**: Enter on a header sorts; VoiceOver reads the sort state ("ascending"/"descending"); Enter on "Row number" returns to file order.
+12. **Column menu**: from a focused header, Tab to "Column menu for …", Enter opens it; arrows move between items; Esc closes it and returns focus.
+13. **Resize**: Tab on to "Resize column …"; arrows change width and the new width is read; Enter fits to content; Esc returns to the header.
+14. **Lenses**: the "View: …" button opens the lens menu; Metadata: JSON toggles are read as buttons with expanded/collapsed; Layout and Grid: the scroll areas can be focused and scrolled with arrows; Grid: "Show as table" opens a table with caption and headers.
+15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows (1.4.10) – note what does not.
+16. **Focus visibility**: on every step above the focused element has a clearly visible outline.
+Note failures with step number, browser and what VoiceOver said.
 
 ### Open decisions – after Phase 8
 Need a decision from the client; implement together with any changes that come out of Phase 8.
 - [ ] **WCAG 2.5.7 Dragging Movements** (AA): column width can only be changed by pointer through dragging the resize handle. The keyboard alternative does not count; a single-pointer alternative is required ([Understanding 2.5.7](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html)). The same gap exists in HighTable and in the original app. Options: (a) column menu items "Wider" / "Narrower" (±10 or ±100 px) and "Fit to content"; (b) a width number input in the column menu; (c) both. Until then this is a known non-conformance.
 - [ ] **Search time span** (requested 2026-10-19, deferred until the shape of real files is known). Facts from the sample files: `start_time` is `TIMESTAMP_MICROS`, `isAdjustedToUTC: true`, and **each file holds a single value** (e.g. `2026-04-15T09:19:00.851Z`), so a span would select whole files. To decide: do real files hold several `start_time` values; input in UTC or local time; inclusive bounds and optional start/end; may a span alone (no query) be searched, which would change the 2-character rule. Row group min/max statistics can skip files/row groups outside the span without reading them.
+- [ ] **Secondary sort keys** (found in Phase 8): with a multi-column sort, the 2nd, 3rd … sort columns show their arrow in `#bbb` (≈ 1.7:1 on `#f0f0f0`) and differ from the primary column only by colour; screen readers get `aria-sort` on the primary column only, so the secondary order is not exposed at all. Possible conflicts: WCAG 1.4.1 Use of Color, 1.4.11 Non-text Contrast, 1.3.1 Info and Relationships. Options: (a) show the sort position (1, 2, …) next to the arrow with ≥ 3:1 contrast and add it to the header's description (e.g. "sorted 2nd, ascending"); (b) darker arrows for all sorted columns plus (a); (c) leave as is (HighTable behaviour). The unsorted ⇅ marks are decorative and can stay light.
 
 ## 7. Risks / open questions
 

@@ -1,6 +1,6 @@
 import type { FileMetaData } from 'hyparquet'
 import type { JSX } from 'solid-js'
-import { For, createMemo } from 'solid-js'
+import { For, createMemo, createUniqueId } from 'solid-js'
 import { columnCell, columnLabelTitle, gridColumns, rowGroupStats, rowGroupTitle } from '../lib/grid.ts'
 
 function parity(index: number): string {
@@ -17,6 +17,7 @@ function pagesText(stats: { totalPages: number, dataPages: number, dictPages: nu
  * The bars are hidden from assistive technology; the same numbers are offered as a table below.
  */
 export default function ParquetGrid(props: { metadata: FileMetaData }): JSX.Element {
+  const captionId = createUniqueId()
   const columns = createMemo(() => gridColumns(props.metadata))
   const rowGroups = createMemo(() => props.metadata.row_groups.map((rowGroup, i) => ({
     index: i,
@@ -55,9 +56,9 @@ export default function ParquetGrid(props: { metadata: FileMetaData }): JSX.Elem
 
     <details class="grid-details">
       <summary>Show as table</summary>
-      <div class="grid-table-wrapper">
+      <div class="grid-table-wrapper" tabIndex={0} role="region" aria-labelledby={captionId}>
         <table class="grid-table">
-          <caption>Compressed bytes per row group and column</caption>
+          <caption id={captionId}>Compressed bytes per row group and column</caption>
           <thead>
             <tr>
               <th scope="col">Row group</th>

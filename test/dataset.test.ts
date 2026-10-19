@@ -45,7 +45,7 @@ describe('dataset', () => {
   })
 
   it('lists every bundled parquet file, sorted by name', () => {
-    const names = listDataSets().map(entry => entry.name)
+    const names = listDataSets().map(entry => entry.name).filter(name => !name.startsWith('large-'))
     expect(names).toEqual(samples.map(sample => sample.name).sort((a, b) => a.localeCompare(b)))
   })
 

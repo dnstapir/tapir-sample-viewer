@@ -48,8 +48,9 @@ describe('Table', () => {
     const { grid } = renderTable()
     expect(grid.getAttribute('aria-rowcount')).toBe(String(df.numRows + 1))
     expect(grid.getAttribute('aria-colcount')).toBe(String(df.columnDescriptors.length + 1))
-    const headers = within(grid).getAllByRole('columnheader').map(th => th.getAttribute('aria-label'))
-    expect(headers).toEqual(['Row number', ...df.columnDescriptors.map(c => c.name)])
+    const [corner, ...headers] = within(grid).getAllByRole('columnheader')
+    expect(corner).toBe(within(grid).getByRole('columnheader', { name: 'Row number' }))
+    expect(headers.map(th => th.getAttribute('aria-label'))).toEqual(df.columnDescriptors.map(c => c.name))
   })
 
   it('fetches and shows cell values, with 1-based row numbers', async () => {

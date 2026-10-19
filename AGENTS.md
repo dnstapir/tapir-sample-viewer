@@ -32,6 +32,7 @@ pnpm preview     # serve dist/
 pnpm lint        # eslint
 pnpm test        # vitest run
 pnpm typecheck   # tsc --noEmit
+pnpm generate:large [rows]  # gitignored large test file in src/parquets/ (excluded from tests)
 ```
 
 Run `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done.
@@ -104,7 +105,7 @@ Match the original ESLint config (ported to `eslint.config.js`):
 - Vitest, tests in `test/*.test.ts`, environment `node` (set in `vite.config.ts`). Unit-test everything in `src/lib/` using the sample files in `src/parquets/`.
 - `test/samples.ts` (`loadSamples()`) reads the sample files' metadata from disk. It copies bytes into the current realm's `ArrayBuffer`, because under jsdom hyparquet's `instanceof ArrayBuffer` check rejects Node's buffers. Number formatting with `toLocaleString` is locale-dependent; build expected strings with `toLocaleString()` in tests.
 - Search: one test per row of the PLAN.md 4.2 example table, plus edge cases.
-- Component tests: `test/*.test.tsx` with `@solidjs/testing-library`; put `// @vitest-environment jsdom` on the first line. Query by role and accessible name. Accessibility checks with `axe-core` (phase 8).
+- Component tests: `test/*.test.tsx` with `@solidjs/testing-library`; put `// @vitest-environment jsdom` on the first line. Query by role and accessible name. `test/a11y.test.tsx` runs axe-core on the main UI states; add new states there. Colour contrast and scrollable-region rules need a real browser: also run axe in the browser (inject `node_modules/axe-core/axe.min.js`) after UI changes.
 - Avoid test file names that differ only in case (`Json.test.tsx` vs `json.test.ts`); macOS is case-insensitive and the TypeScript project service rejects the pair.
 
 ## Deployment

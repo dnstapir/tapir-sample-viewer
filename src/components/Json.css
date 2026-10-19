@@ -37,6 +37,8 @@
   min-width: 24px;
   padding: 0;
   text-align: left;
+  /* full line width: the collapsed preview sizes itself to its container (a shrink-to-fit button would loop) */
+  width: 100%;
 }
 .json-caret {
   color: #8a8aa0;

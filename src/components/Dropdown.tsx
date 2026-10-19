@@ -150,7 +150,7 @@ export default function Dropdown(props: DropdownProps): JSX.Element {
       aria-label={props.ariaLabel}
       aria-haspopup="menu"
       aria-expanded={open()}
-      aria-controls={menuId}
+      aria-controls={open() ? menuId : undefined}
       tabIndex={props.tabIndex}
       onClick={event => {
         event.stopPropagation()
@@ -166,7 +166,8 @@ export default function Dropdown(props: DropdownProps): JSX.Element {
     </button>
     <Show when={open()}>
       <Show when={props.portal} fallback={menuContent()}>
-        <Portal>{menuContent()}</Portal>
+        {/* inside the nearest landmark, so the menu is not outside all landmarks */}
+        <Portal mount={root?.closest('main') ?? document.body}>{menuContent()}</Portal>
       </Show>
     </Show>
   </div>
