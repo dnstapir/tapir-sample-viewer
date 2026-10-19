@@ -1,24 +1,16 @@
 import type { JSX } from 'solid-js'
 import { createSignal } from 'solid-js'
-import { minColumnWidth } from '../lib/columnWidths.ts'
-
-const smallStep = 10
-const bigStep = 100
 
 interface ResizerProps {
-  column: string
   width?: number
-  tabIndex: number
   resizeTo: (width: number) => void
   autoResize: () => void
-  /** move focus back to the header cell */
-  exit: () => void
 }
 
 /**
- * Column resize handle: a focusable vertical separator (APG window splitter pattern).
- * Drag with the pointer, or use arrows (10px), PageUp/PageDown (100px), Home (minimum),
- * Enter/Space or double-click (fit to content), Escape (back to the header).
+ * Column resize handle for the pointer: drag to resize, double-click to fit to content.
+ * Hidden from assistive technology and not focusable: the column menu offers the same
+ * (Wider, Narrower, Fit to content) for keyboard, screen-reader and single-pointer use (WCAG 2.5.7).
  */
 export default function ColumnResizer(props: ResizerProps): JSX.Element {
   const [drag, setDrag] = createSignal<{ pointerId: number, startX: number, startWidth: number }>()
@@ -45,41 +37,9 @@ export default function ColumnResizer(props: ResizerProps): JSX.Element {
     if (drag()?.pointerId === event.pointerId) setDrag(undefined)
   }
 
-  function onKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Tab') return
-    event.stopPropagation()
-    if (drag()) return
-    const current = props.width
-    const handled = (() => {
-      switch (event.key) {
-      case 'Escape': props.exit(); return true
-      case 'Enter':
-      case ' ': props.autoResize(); props.exit(); return true
-      case 'Home': props.resizeTo(minColumnWidth); return true
-      }
-      if (current === undefined) return false
-      switch (event.key) {
-      case 'ArrowRight':
-      case 'ArrowUp': props.resizeTo(current + smallStep); return true
-      case 'ArrowLeft':
-      case 'ArrowDown': props.resizeTo(current - smallStep); return true
-      case 'PageUp': props.resizeTo(current + bigStep); return true
-      case 'PageDown': props.resizeTo(current - bigStep); return true
-      }
-      return false
-    })()
-    if (handled) event.preventDefault()
-  }
-
   return <span
     class="column-resizer"
-    role="separator"
-    aria-orientation="vertical"
-    aria-label={`Resize column ${props.column}`}
-    aria-valuemin={minColumnWidth}
-    aria-valuenow={props.width}
-    aria-valuetext={props.width === undefined ? 'automatic width' : `${props.width} pixels`}
-    tabIndex={props.tabIndex}
+    aria-hidden="true"
     onPointerDown={onPointerDown}
     onPointerMove={onPointerMove}
     onPointerUp={onPointerUp}
@@ -88,6 +48,5 @@ export default function ColumnResizer(props: ResizerProps): JSX.Element {
       if (!drag()) props.autoResize()
     }}
     onClick={event => { event.stopPropagation() }}
-    onKeyDown={onKeyDown}
   />
 }

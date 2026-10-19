@@ -12,8 +12,10 @@ import './Table.css'
 
 interface TableProps {
   df: DataFrame
-  /** data set name: caption and key for persisted column widths */
+  /** data set name: key for persisted column widths */
   name: string
+  /** accessible name of the grid, e.g. "Table" */
+  label: string
   onError: (error: unknown) => void
 }
 
@@ -24,6 +26,13 @@ interface Position {
 }
 
 const rowsPerPage = 20
+const widthStep = 50
+const sortHint = 'Select a column header to sort'
+
+function sortMessage(order: OrderBy): string {
+  if (order.length === 0) return 'Sorted by row number (file order)'
+  return `Sorted by ${order[0].column}, ${order[0].direction}`
+}
 
 function widthStyle(width: number | undefined): JSX.CSSProperties | undefined {
   return width === undefined ? undefined : { 'min-width': `${width}px`, 'max-width': `${width}px` }
@@ -50,6 +59,7 @@ export default function Table(props: TableProps): JSX.Element {
   const df = untrack(() => props.df)
   const storageKey = untrack(() => widthsStorageKey(props.name))
   const captionId = createUniqueId()
+  const hintId = createUniqueId()
   const numRows = () => df.numRows
 
   // data version: bumped whenever the data frame resolves cells, so cell reads re-run
@@ -171,6 +181,10 @@ export default function Table(props: TableProps): JSX.Element {
     setMeasured(current => withoutKey(current, column))
   }
 
+  function resizeBy(column: string, delta: number) {
+    resizeTo(column, (width(column) ?? headerCells.get(column)?.offsetWidth ?? minColumnWidth) + delta)
+  }
+
   // keyboard navigation (roving tabindex)
   const [position, setPosition] = createSignal<Position>({ row: 1, col: 1 })
   const rowCount = () => numRows() + 1
@@ -211,6 +225,25 @@ export default function Table(props: TableProps): JSX.Element {
     return current.row === row && current.col === col ? 0 : -1
   }
 
+  // the scroll area is a tab stop only while the focusable cell is scrolled out of the DOM
+  const activeCellRendered = () => {
+    const { row } = position()
+    return row === 1 || row - 2 >= range().start && row - 2 < range().end
+  }
+
+  // focus can also arrive from a screen reader or a click; keep the roving position in sync
+  function onGridFocusIn(event: FocusEvent) {
+    const cell = event.target as HTMLElement
+    const row = Number(cell.parentElement?.getAttribute('aria-rowindex'))
+    const col = Number(cell.getAttribute('aria-colindex'))
+    if (!row || !col) return
+    const current = position()
+    if (current.row !== row || current.col !== col) {
+      setPosition({ row, col })
+      cell.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
+  }
+
   function onGridKeyDown(event: KeyboardEvent) {
     if (event.altKey || event.metaKey || event.shiftKey) return
     const { row, col } = position()
@@ -241,9 +274,15 @@ export default function Table(props: TableProps): JSX.Element {
     }
   }
 
-  // sorting and column visibility
+  // sorting and column visibility; screen readers do not reliably announce aria-sort changes
+  const [sortStatus, setSortStatus] = createSignal('')
+  function sortBy(order: OrderBy) {
+    setOrderBy(order)
+    setSortStatus(sortMessage(order))
+  }
+
   function toggleSort(column: string) {
-    setOrderBy(current => toggleColumn(column, current))
+    sortBy(toggleColumn(column, orderBy()))
   }
 
   function hideColumn(column: string) {
@@ -258,9 +297,9 @@ export default function Table(props: TableProps): JSX.Element {
     <div
       ref={el => { scroller = el }}
       class="table-scroll"
-      role="group"
-      aria-labelledby={captionId}
-      tabIndex={0}
+      role={activeCellRendered() ? undefined : 'group'}
+      aria-label={activeCellRendered() ? undefined : props.label}
+      tabIndex={activeCellRendered() ? -1 : 0}
       onKeyDown={onScrollerKeyDown}
     >
       <div class="table-canvas" style={{ height: `${slice().canvasHeight}px` }}>
@@ -271,25 +310,27 @@ export default function Table(props: TableProps): JSX.Element {
           aria-colcount={colCount()}
           style={{ top: `${slice().top}px` }}
           onKeyDown={onGridKeyDown}
+          onFocusIn={onGridFocusIn}
         >
-          <caption id={captionId} class="visually-hidden">{props.name}</caption>
+          <caption id={captionId} class="visually-hidden">{props.label}</caption>
           <thead>
-            <tr ref={el => { headerRow = el }} aria-rowindex={1}>
+            <tr ref={el => { headerRow = el }} aria-rowindex={1} aria-label="Column headers">
               <th
                 class="table-corner"
                 scope="col"
                 role="columnheader"
                 aria-colindex={1}
                 aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
+                aria-describedby={hintId}
                 title={orderBy().length === 0 ? 'Sorted by row number (file order)' : 'Press to reset sorting to row number (file order)'}
                 tabIndex={tabIndexFor(1, 1)}
                 onMouseDown={() => setPosition({ row: 1, col: 1 })}
-                onClick={() => setOrderBy([])}
+                onClick={() => { sortBy([]) }}
                 onKeyDown={event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
                     event.stopPropagation()
-                    setOrderBy([])
+                    sortBy([])
                   }
                 }}
               >
@@ -304,6 +345,7 @@ export default function Table(props: TableProps): JSX.Element {
                   width={width(column)}
                   fixedWidth={fixed()[column] !== undefined}
                   tabIndex={tabIndexFor(1, index() + 2)}
+                  hintId={hintId}
                   canHide={columns().length > 1}
                   canShowAll={hidden().size > 0}
                   ref={el => { headerCells.set(column, el) }}
@@ -312,8 +354,8 @@ export default function Table(props: TableProps): JSX.Element {
                   onHide={() => { hideColumn(column) }}
                   onShowAll={() => setHidden(new Set<string>())}
                   onResize={value => { resizeTo(column, value) }}
+                  onResizeBy={delta => { resizeBy(column, delta) }}
                   onAutoResize={() => { autoResize(column) }}
-                  onExitResizer={() => { goTo({ row: 1, col: index() + 2 }) }}
                 />}
               </For>
             </tr>
@@ -326,7 +368,7 @@ export default function Table(props: TableProps): JSX.Element {
                   const value = rowNumber()
                   return value === undefined ? undefined : (value + 1).toLocaleString('en-US')
                 }
-                return <tr aria-rowindex={row + 2}>
+                return <tr aria-rowindex={row + 2} aria-label={rowLabel() === undefined ? undefined : `Row ${rowLabel()}`}>
                   <th
                     scope="row"
                     role="rowheader"
@@ -368,6 +410,8 @@ export default function Table(props: TableProps): JSX.Element {
         </table>
       </div>
     </div>
+    <span id={hintId} class="visually-hidden">{sortHint}</span>
+    <p class="visually-hidden" role="status">{sortStatus()}</p>
   </div>
 }
 
@@ -382,6 +426,7 @@ interface ColumnHeaderProps {
   width?: number
   fixedWidth: boolean
   tabIndex: number
+  hintId: string
   canHide: boolean
   canShowAll: boolean
   ref: (element: HTMLTableCellElement) => void
@@ -390,8 +435,8 @@ interface ColumnHeaderProps {
   onHide: () => void
   onShowAll: () => void
   onResize: (width: number) => void
+  onResizeBy: (delta: number) => void
   onAutoResize: () => void
-  onExitResizer: () => void
 }
 
 function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
@@ -405,6 +450,9 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     return `Press to stop sorting by ${props.column}`
   }
   const menuItems = () => [
+    { label: 'Wider', onSelect: () => { props.onResizeBy(widthStep) } },
+    { label: 'Narrower', onSelect: () => { props.onResizeBy(-widthStep) } },
+    { label: 'Fit to content', onSelect: () => { props.onAutoResize() } },
     ...props.canHide ? [{ label: 'Hide column', onSelect: () => { props.onHide() } }] : [],
     ...props.canShowAll ? [{ label: 'Show all columns', onSelect: () => { props.onShowAll() } }] : [],
   ]
@@ -416,6 +464,7 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     aria-colindex={props.colIndex}
     aria-sort={ariaSort()}
     aria-label={props.column}
+    aria-describedby={props.hintId}
     title={description()}
     tabIndex={props.tabIndex}
     style={widthStyle(props.width)}
@@ -433,27 +482,22 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     }}
     onCopy={event => { copyOnEvent(event, props.column) }}
   >
-    <span class="column-name">{props.column}</span>
+    {/* the name comes from aria-label; hidden here so it is not read twice */}
+    <span class="column-name" aria-hidden="true">{props.column}</span>
     <span class="sort-indicator" aria-hidden="true">{indicator()}</span>
-    {/* a single-column file with nothing hidden has no menu actions */}
-    <Show when={menuItems().length > 0}>
-      <Dropdown
-        label={<span aria-hidden="true">{'\u22ee'}</span>}
-        ariaLabel={`Column menu for ${props.column}`}
-        noCaret
-        buttonClass="column-menu-button"
-        tabIndex={props.tabIndex}
-        portal
-        items={menuItems()}
-      />
-    </Show>
-    <ColumnResizer
-      column={props.column}
-      width={props.width}
+    <Dropdown
+      label={<span aria-hidden="true">{'\u22ee'}</span>}
+      ariaLabel="Column menu"
+      noCaret
+      buttonClass="column-menu-button"
       tabIndex={props.tabIndex}
+      portal
+      items={menuItems()}
+    />
+    <ColumnResizer
+      width={props.width}
       resizeTo={value => { props.onResize(value) }}
       autoResize={() => { props.onAutoResize() }}
-      exit={() => { props.onExitResizer() }}
     />
   </th>
 }

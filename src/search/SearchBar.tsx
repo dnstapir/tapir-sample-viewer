@@ -70,37 +70,22 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
       />
       <button type="submit" aria-describedby={optionsChanged() ? `${id}-pending` : undefined}>Search</button>
       <SearchHelp />
-      <Show when={optionsChanged()}>
-        <span id={`${id}-pending`} class="search-note">Options changed – press Search to update.</span>
-      </Show>
     </div>
     <p id={`${id}-error`} class="search-error" role="alert">{queryError()}</p>
 
-    <div class="search-row">
-      <fieldset class="search-group">
-        <legend>Search by</legend>
-        <label>
-          <input type="radio" name={`${id}-mode`} value="domain" checked={mode() === 'domain'} onChange={() => setMode('domain')} />
-          Domain
-        </label>
-        <label>
-          <input type="radio" name={`${id}-mode`} value="columns" checked={mode() === 'columns'} onChange={() => setMode('columns')} />
-          Columns
-        </label>
-      </fieldset>
-      <label class="search-extended">
-        <input
-          type="checkbox"
-          checked={extended()}
-          onChange={event => {
-            setExtended(event.currentTarget.checked)
-            props.onExtendedChange?.(event.currentTarget.checked)
-          }}
-        />
-        Extended search (all files)
+    <fieldset class="search-group">
+      <legend>Search by</legend>
+      <label>
+        <input type="radio" name={`${id}-mode`} value="domain" checked={mode() === 'domain'} onChange={() => setMode('domain')} />
+        Domain
       </label>
-    </div>
+      <label>
+        <input type="radio" name={`${id}-mode`} value="columns" checked={mode() === 'columns'} onChange={() => setMode('columns')} />
+        Columns
+      </label>
+    </fieldset>
 
+    {/* directly after the Columns radio, so the next Tab reaches the checkboxes */}
     <Show when={mode() === 'columns'}>
       <fieldset class="search-group" aria-describedby={`${id}-columns-note`}>
         <legend>Columns</legend>
@@ -119,6 +104,21 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
     {/* rendered while hidden too, so the message is announced when it appears */}
     <p id={`${id}-columns-note`} class="search-error" role="status">{noColumns() ? messages.noColumns : ''}</p>
 
+    <label class="search-extended">
+      <input
+        type="checkbox"
+        checked={extended()}
+        onChange={event => {
+          setExtended(event.currentTarget.checked)
+          props.onExtendedChange?.(event.currentTarget.checked)
+        }}
+      />
+      Extended search (all files)
+    </label>
+
+    <Show when={optionsChanged()}>
+      <p id={`${id}-pending`} class="search-note">Options changed – press Search to update.</p>
+    </Show>
     <p class="search-status" role="status">{props.status}</p>
   </form>
 }

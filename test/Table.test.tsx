@@ -28,8 +28,12 @@ describe('Table', () => {
   afterEach(cleanup)
 
   function renderTable(onError = vi.fn()) {
-    render(() => <Table df={df} name="sample" onError={onError} />)
-    return { grid: screen.getByRole('grid', { name: 'sample' }), onError }
+    render(() => <Table df={df} name="sample" label="Table" onError={onError} />)
+    return { grid: screen.getByRole('grid', { name: 'Table' }), onError }
+  }
+
+  function columnMenu(grid: HTMLElement, column: string): HTMLElement {
+    return within(within(grid).getByRole('columnheader', { name: column })).getByRole('button', { name: 'Column menu' })
   }
 
   async function loaded(grid: HTMLElement) {
@@ -78,6 +82,22 @@ describe('Table', () => {
     expect(header.getAttribute('aria-sort')).toBe('none')
   })
 
+  it('describes headers as sortable and announces sort changes', async () => {
+    const { grid } = renderTable()
+    await loaded(grid)
+    const header = within(grid).getByRole('columnheader', { name: 'label1' })
+    const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
+    for (const cell of [header, corner]) {
+      expect(document.getElementById(cell.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Select a column header to sort')
+    }
+    const status = screen.getByRole('status')
+    expect(status.textContent).toBe('')
+    fireEvent.click(header)
+    expect(status.textContent).toBe('Sorted by label1, ascending')
+    fireEvent.click(corner)
+    expect(status.textContent).toBe('Sorted by row number (file order)')
+  })
+
   it('resets a multi-column sort to file order from the row number header', async () => {
     const { grid } = renderTable()
     await loaded(grid)
@@ -104,9 +124,11 @@ describe('Table', () => {
   it('has one tab stop and moves it with the arrow keys', async () => {
     const { grid } = renderTable()
     await loaded(grid)
-    const scroller = screen.getByRole('group', { name: 'sample' })
-    fireEvent.keyDown(scroller, { key: 'Enter' })
-    expect(document.activeElement?.getAttribute('aria-colindex')).toBe('1')
+    // the scroll area is no extra tab stop while the focusable cell is rendered
+    expect(grid.closest('.table-scroll')?.getAttribute('tabindex')).toBe('-1')
+    const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
+    expect(corner.getAttribute('tabindex')).toBe('0')
+    corner.focus()
 
     fireEvent.keyDown(document.activeElement ?? grid, { key: 'ArrowRight' })
     fireEvent.keyDown(document.activeElement ?? grid, { key: 'ArrowDown' })
@@ -117,32 +139,63 @@ describe('Table', () => {
     expect(grid.querySelectorAll('[role=gridcell][tabindex="0"], [role=columnheader][tabindex="0"]')).toHaveLength(1)
   })
 
+  it('continues from a cell focused by other means, e.g. a screen reader', async () => {
+    const { grid } = renderTable()
+    await loaded(grid)
+    const label3 = within(grid).getByRole('columnheader', { name: 'label3' })
+    label3.focus()
+    expect(label3.getAttribute('tabindex')).toBe('0')
+    fireEvent.keyDown(label3, { key: 'ArrowRight' })
+    expect(document.activeElement).toBe(within(grid).getByRole('columnheader', { name: 'label4' }))
+  })
+
+  it('names rows briefly instead of by their content', async () => {
+    const { grid } = renderTable()
+    await loaded(grid)
+    const [headerRow, firstRow] = within(grid).getAllByRole('row')
+    expect(headerRow.getAttribute('aria-label')).toBe('Column headers')
+    expect(firstRow.getAttribute('aria-label')).toBe('Row 1')
+  })
+
   it('hides a column from its menu and shows all columns again', async () => {
     const { grid } = renderTable()
     await loaded(grid)
-    fireEvent.click(screen.getByRole('button', { name: 'Column menu for label1' }))
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Hide column'])
+    fireEvent.click(columnMenu(grid, 'label1'))
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Wider', 'Narrower', 'Fit to content', 'Hide column'])
     fireEvent.click(screen.getByRole('menuitem', { name: 'Hide column' }))
     expect(within(grid).queryByRole('columnheader', { name: 'label1' })).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Column menu for label0' }))
+    fireEvent.click(columnMenu(grid, 'label0'))
     fireEvent.click(screen.getByRole('menuitem', { name: 'Show all columns' }))
     expect(within(grid).getByRole('columnheader', { name: 'label1' })).toBeTruthy()
   })
 
-  it('resizes a column with the keyboard, persists the width, and auto-sizes on Enter', async () => {
+  it('resizes a column from its menu, persists the width, and fits to content', async () => {
     const { grid } = renderTable()
     await loaded(grid)
-    const resizer = screen.getByRole('separator', { name: 'Resize column label1' })
-    const initial = Number(resizer.getAttribute('aria-valuenow'))
+    const header = within(grid).getByRole('columnheader', { name: 'label1' })
+    const initial = parseFloat(header.style.minWidth)
     expect(initial).toBeGreaterThan(0)
 
-    fireEvent.keyDown(resizer, { key: 'ArrowRight' })
-    expect(resizer.getAttribute('aria-valuenow')).toBe(String(initial + 10))
-    expect(JSON.parse(localStorage.getItem(widthsStorageKey('sample')) ?? '{}')).toEqual({ label1: initial + 10 })
+    fireEvent.click(columnMenu(grid, 'label1'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Wider' }))
+    expect(header.style.minWidth).toBe(`${initial + 50}px`)
+    expect(JSON.parse(localStorage.getItem(widthsStorageKey('sample')) ?? '{}')).toEqual({ label1: initial + 50 })
 
-    fireEvent.keyDown(resizer, { key: 'Enter' })
+    fireEvent.click(columnMenu(grid, 'label1'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Narrower' }))
+    expect(header.style.minWidth).toBe(`${initial}px`)
+
+    fireEvent.click(columnMenu(grid, 'label1'))
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Fit to content' }))
     expect(localStorage.getItem(widthsStorageKey('sample'))).toBeNull()
+  })
+
+  it('keeps the drag handle out of the accessibility tree and tab order', () => {
+    const { grid } = renderTable()
+    const handle = grid.querySelector('.column-resizer')
+    expect(handle?.getAttribute('aria-hidden')).toBe('true')
+    expect(handle?.hasAttribute('tabindex')).toBe(false)
   })
 
   it('reports fetch errors', async () => {

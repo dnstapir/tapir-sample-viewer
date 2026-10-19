@@ -109,8 +109,8 @@ main {
   flex: 1;
   height: 100vh;
   padding: 0;
-  /* no outer scrollbars */
-  overflow: hidden;
+  /* normally no outer scrollbar; scrolls when zoomed in or the window is small (WCAG 1.4.10) */
+  overflow: auto;
 }
 
 .top-header {
@@ -142,10 +142,27 @@ main {
   width: 5rem;
   height: auto;
 }
-.top-header select {
-  /* long file names must not push the select out of the header */
+
+.file-chooser {
+  align-items: center;
+  background-color: #f5f5f8;
+  border-radius: 8px;
+  color: #333;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 14px;
+  gap: 8px 16px;
+  margin: 0 5px 5px;
+  padding: 10px 20px;
+}
+.file-chooser label {
+  font-weight: 600;
+}
+.file-chooser select {
+  /* long file names must not push the select out of the page */
+  max-width: 100%;
   min-width: 0;
-  max-width: 60%;
+  min-height: 24px;
 }
 
 .view-header {
@@ -161,6 +178,7 @@ main {
   white-space: nowrap;
 }
 .viewer {
+  min-height: 12rem;
   display: flex;
   flex: 1;
   flex-direction: column;

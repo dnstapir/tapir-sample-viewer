@@ -102,13 +102,39 @@ describe('SearchBar', () => {
     expect(onSubmit.mock.calls[0][0].predicate?.columns).toEqual(['label0', 'label2'])
   })
 
-  it('announces the status politely and has a help button with a popover', () => {
+  it('announces the status politely', () => {
     setup('3 matching rows')
     const statuses = screen.getAllByRole('status').map(element => element.textContent)
     expect(statuses).toContain('3 matching rows')
-    const help = screen.getByRole('button', { name: 'Search help' })
-    const popover = document.getElementById(help.getAttribute('popovertarget') ?? '')
-    expect(popover?.getAttribute('popover')).toBe('auto')
-    expect(popover?.textContent).toContain('www.svt.se')
+  })
+
+  it('opens the help in a modal dialog with a Close button, including how to sort the table', () => {
+    // jsdom does not implement modal dialogs
+    const showModal = vi.fn(function (this: HTMLDialogElement) { this.setAttribute('open', '') })
+    const close = vi.fn(function (this: HTMLDialogElement) { this.removeAttribute('open') })
+    Object.assign(HTMLDialogElement.prototype, { showModal, close })
+    setup()
+    const help = screen.getByRole('button', { name: 'Help' })
+    expect(help.getAttribute('aria-haspopup')).toBe('dialog')
+
+    fireEvent.click(help)
+    expect(showModal).toHaveBeenCalledTimes(1)
+    const dialog = screen.getByRole('dialog', { name: 'Help' })
+    expect(dialog.textContent).toContain('www.svt.se')
+    expect(dialog.textContent).toContain('Click or select a column header to sort. Click/select Row number header to restore file order.')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it('places the column choice right after the mode and the Options changed note below the options', () => {
+    const { form } = setup()
+    fireEvent.click(screen.getByRole('radio', { name: 'Columns' }))
+    const order = [...form.querySelectorAll('input, p.search-note')].map(element =>
+      element instanceof HTMLInputElement ? element.closest('label')?.textContent.trim() : element.textContent)
+    expect(order.slice(1)).toEqual([
+      'Domain', 'Columns', ...Array.from({ length: 10 }, (_, i) => `label${i}`),
+      'Extended search (all files)', 'Options changed – press Search to update.',
+    ])
   })
 })

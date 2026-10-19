@@ -20,7 +20,7 @@ describe('Page', () => {
       extended
       onError={vi.fn()}
     />)
-    const select = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Parquet file' })
+    const select = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Choose file' })
     const extended = screen.getByRole('checkbox', { name: 'Extended search (all files)' })
 
     fireEvent.click(extended)

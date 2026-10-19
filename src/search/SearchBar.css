@@ -50,6 +50,9 @@
   margin-right: 12px;
   min-height: 24px;
 }
+.search-extended {
+  align-self: flex-start;
+}
 
 .search-note {
   color: #444;
@@ -84,8 +87,19 @@
   color: #222;
   font-size: 14px;
   line-height: 1.5;
+  max-height: calc(100vh - 32px);
   max-width: min(36rem, calc(100vw - 32px));
+  padding: 0;
+}
+.search-help::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+.search-help-content {
   padding: 16px 20px;
+}
+.search-help-close {
+  float: right;
+  margin-left: 12px;
 }
 .search-help h2 {
   margin-top: 0;

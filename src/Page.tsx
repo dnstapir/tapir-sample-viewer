@@ -1,5 +1,5 @@
 import type { JSX } from 'solid-js'
-import { For, Match, Show, Switch, createSignal } from 'solid-js'
+import { For, Match, Show, Switch, createSignal, createUniqueId } from 'solid-js'
 import Dropdown from './components/Dropdown.tsx'
 import ParquetGrid from './lenses/ParquetGrid.tsx'
 import ParquetLayout from './lenses/ParquetLayout.tsx'
@@ -38,6 +38,7 @@ export default function Page(props: PageProps): JSX.Element {
   const [lens, setLens] = createSignal<Lens>('table')
   // the file selector follows the checkbox, not the submitted search (decided 2026-10-19)
   const [extendedChecked, setExtendedChecked] = createSignal(false)
+  const fileSelectId = createUniqueId()
   const lensItems = () => lenses.map(name => ({
     label: lensLabels[name],
     checked: lens() === name,
@@ -60,8 +61,11 @@ export default function Page(props: PageProps): JSX.Element {
         <img class="tapir-logo" src="TAPIR-positiv.svg" alt="" />
         DNS Tapir
       </h1>
+    </header>
+    <div class="file-chooser">
+      <label for={fileSelectId}>Choose file</label>
       <select
-        aria-label="Parquet file"
+        id={fileSelectId}
         disabled={extendedChecked()}
         onChange={event => { props.onSelect(Number(event.currentTarget.value)) }}
       >
@@ -69,7 +73,7 @@ export default function Page(props: PageProps): JSX.Element {
           {(entry, index) => <option value={index()} selected={index() === props.selectedIndex}>{entry.name}</option>}
         </For>
       </select>
-    </header>
+    </div>
     <SearchBar
       onSubmit={search => { props.onSearch(search) }}
       onExtendedChange={setExtendedChecked}
@@ -93,7 +97,12 @@ export default function Page(props: PageProps): JSX.Element {
             <Show when={!props.searching} fallback={<p class="placeholder">Searching…</p>}>
               {/* keyed: a new data set or result gets a fresh table (scroll, sort, focus) */}
               <Show when={props.searchResult ?? dataSet()} keyed>
-                {current => <Table df={current.df} name={current.name} onError={props.onError} />}
+                {current => <Table
+                  df={current.df}
+                  name={current.name}
+                  label={props.searchResult ? 'Search results' : 'Table'}
+                  onError={props.onError}
+                />}
               </Show>
             </Show>
           </Match>

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from '@solidjs/testing-library'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@solidjs/testing-library'
 import axe from 'axe-core'
 import { sortableDataFrame } from 'hightable/dataframe'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
@@ -67,7 +67,7 @@ describe('accessibility (axe-core)', () => {
 
   it('Table lens with the column menu open has no violations', async () => {
     renderPage()
-    fireEvent.click(screen.getByRole('button', { name: 'Column menu for label1' }))
+    fireEvent.click(within(screen.getByRole('columnheader', { name: 'label1' })).getByRole('button', { name: 'Column menu' }))
     expect(await violations()).toEqual([])
   })
 

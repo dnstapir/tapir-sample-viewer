@@ -137,7 +137,7 @@ Requirement (client): `label1` is the primary search target; searching on a full
 - Row numbers in results are the original row numbers in each file.
 - Domain mode also rejects empty parts (`.se`, `www..se`) and more than 10 parts (only `label0`–`label9` exist).
 
-**Help**: an **(i)** button next to the search field opens a native `popover="auto"` (light dismiss, Esc; Baseline 2024: Chrome/Edge 114, Firefox 125, Safari 17 – [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/popover)). Draft text (to be reviewed with the client once search is built, see Phase 6):
+**Help**: an **(i)** button (name "Help") next to the search field opens a modal `<dialog>` with a Close button (decided 2026-10-19, replaced `popover="auto"`, which left the page behind reachable by Tab). Esc, Close or a click on the backdrop closes it; focus returns to the button. Draft text (to be reviewed with the client once search is built, see Phase 6):
 
 > **Search**
 > Type at least 2 characters and press Enter or click Search. Changed options take effect when you search again.
@@ -184,7 +184,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - Visible `<label>` for the input; Extended search is a native checkbox with label.
 - Result count and progress announced via a `role="status"` live region ("12 results", "Searching file 3 of 5…").
 - Validation message linked with `aria-describedby`; `aria-invalid` on the input when too short.
-- (i) button has an accessible name ("Search help"); popover content reachable by keyboard.
+- (i) button has an accessible name ("Help"); the help is a modal dialog, reachable by keyboard.
 - Disabled file selector uses the native `disabled` attribute.
 
 **Other UI**
@@ -278,8 +278,8 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Per-cell loading placeholder (shimmer, disabled with `prefers-reduced-motion`) plus visually hidden "Loading" text and `aria-busy`.
 - [x] Sticky header, corner and row-number column; 1-based original row numbers.
 - [x] Sorting: click or Enter/Space on a header → `toggleColumn` (ascending → descending → none, multi-column); indicator; `aria-sort` on the primary column.
-- [x] Column widths (`src/lib/columnWidths.ts`): measured when data arrives, adjusted to fit the viewport (HighTable's algorithm), user widths persisted in `localStorage` per data set; resize by pointer drag or keyboard; double-click / Enter auto-sizes.
-- [x] Column menu (⋮, `Dropdown` rendered in a portal): hide column, show all columns. The "Sort order" item was removed (decided 2026-10-19): it duplicated the header click and its label showed the current state while selecting it switched to the next one. The button is not rendered when the menu would be empty (single-column file, nothing hidden).
+- [x] Column widths (`src/lib/columnWidths.ts`): measured when data arrives, adjusted to fit the viewport (HighTable's algorithm), user widths persisted in `localStorage` per data set; resize by pointer drag (double-click fits to content) or from the column menu.
+- [x] Column menu (⋮, `Dropdown` rendered in a portal, name "Column menu"): Wider, Narrower (±50 px), Fit to content, hide column, show all columns. The "Sort order" item was removed (decided 2026-10-19): it duplicated the header click and its label showed the current state while selecting it switched to the next one.
 - [x] Keyboard navigation: one tab stop (roving `tabindex`), arrows, Ctrl+arrows, Home/End, Ctrl+Home/End, PageUp/PageDown (20 rows); Enter/Space/Tab on the scroll area enters the grid.
 - [x] Copy: Ctrl/Cmd+C on a focused cell copies its text (HighTable feature; the earlier "not planned" note was wrong).
 - [x] Long values (> 100 characters) get a tooltip.
@@ -289,14 +289,14 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Tests: viewport math, column width rules/storage, and a component test (grid semantics, fetching, sort cycle, keyboard, hide/show, resize + persistence, fetch errors).
 - ~~Row selection~~ – **deferred** (decided 2026-10-16): not enabled in the original app (HighTable only turns it on when `selection`/`onSelectionChange` props are passed, and `tapir-hyparquet` passes neither), and nothing uses a selection yet. Revisit if a feature needs it, e.g. exporting selected rows.
 - [x] Target size (WCAG 2.5.8, fixed 2026-10-16): column menu button 20×20 → 24×24 px, resize handle hit area 8 → 24 px wide (visible line still 4 px). Both sit inside the clickable header, so the spacing exception cannot apply. Header `padding-right` grows from `10px + 2.5rem` (50 px) to `48px + 1rem` (64 px), so auto-measured columns are 14 px wider than in the original. The same review found JSON toggles in the Metadata lens on adjacent lines too close for the spacing exception; they now have `min-height`/`min-width: 24px`. Checked in the browser: every target in all lenses is ≥ 24×24 or passes the spacing exception (file `<select>` 21 px high and lens button 17 px high pass by spacing).
-- [ ] Dragging alternative (WCAG 2.5.7) – moved to [Open decisions](#open-decisions--after-phase-8).
+- [x] Dragging alternative (WCAG 2.5.7) – solved 2026-10-19 by the Wider / Narrower / Fit to content menu items.
 - [x] Row number header (decided 2026-10-16): the corner cell is a `columnheader` "Row number"; click/Enter/Space clears all sorting (file order). It has `aria-sort="ascending"` while no other column is sorted. Multi-column sort (HighTable `toggleColumn`) is kept as is; this header is the way back to file order.
 - Fixed-width dot on headers (4×4 px, `#9d9cd5`, ≈ 2.3:1 on `#f0f0f0`): client decision 2026-10-16 – not information needed to use the table, so WCAG 1.4.11 does not apply. Kept as in HighTable.
 
 Deviations from HighTable (accessibility):
 - No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
 - Data cells are `role="gridcell"` (HighTable: `cell`, invalid inside `grid`); `aria-sort` only on the primary sort column.
-- Resize handle is a focusable `separator` (APG window splitter) instead of a `spinbutton`.
+- Resize handle is pointer-only and hidden from assistive technology (`aria-hidden`, not focusable); keyboard, screen-reader and single-pointer users resize from the column menu (HighTable: focusable `spinbutton`). Decided 2026-10-19 (header option 2) after VoiceOver read every header as "name, Column menu for name, N pixels, Resize column name".
 - Menu button 24×24 px and resize hit area 24 px wide (HighTable: 20×20 and 8 px), see 2.5.8 above.
 - Corner cell is a sortable "Row number" header that resets sorting (HighTable: empty cell with the hyparquet logo).
 - Column menu has no sort item; sorting is done on the header only.
@@ -307,7 +307,7 @@ Deviations from HighTable (accessibility):
 - [x] `src/lib/filteredDataFrame.ts` (fetches source rows in consecutive runs) + tests.
 - [x] `src/lib/concatDataFrame.ts` (adds `File` column, forwards events of all parts) + tests.
 - [x] `SearchBar`: `<form role="search">`, labelled `<input type="search">`, Search button, mode radio group, column checkboxes (`<fieldset>` + `<legend>`, only in Columns mode), Extended search checkbox, validation (`role="alert"`, `aria-invalid`, `aria-describedby`), "Choose at least one column" note (`role="status"`, before submit), "Options changed" note, result/progress status (`role="status"`). Component tests.
-- [x] `SearchHelp`: (i) button (name "Search help", 28×28 px) + `popover="auto"` with the 4.2 help text.
+- [x] `SearchHelp`: (i) button (name "Help", 28×28 px) + modal dialog with the 4.2 help text.
 - [x] Wire into `Page`/`App`: last submitted search in `App`, `createResource` for results, previous search aborted on submit/file change, file selector disabled while the Extended search checkbox is checked, view header shows "N of M rows" / "N rows from F files".
 - [ ] Review the help text together with the client once search works; update 4.2 and `SearchHelp`.
 - [ ] Review with the client: in Extended search the Metadata/Layout/Grid lenses still show the selected file (the disabled file selector shows which).
@@ -331,33 +331,79 @@ Findings:
   - `region`: the column menu portal was outside the `main` landmark → mounted inside it.
   - `aria-controls` pointed at a menu that does not exist while closed → only set while open.
   - Remaining "incomplete" (needs review): contrast of the sort arrows and the dropdown caret (non-text characters), and the help popover text (#222 on white, ≈ 16:1).
-- [ ] Accessibility, manual: keyboard-only and VoiceOver walkthrough – checklist below, done by the client.
+- [ ] Accessibility, manual: keyboard-only and VoiceOver walkthrough – checklist below, done by the client. First pass 2026-10-19; fixes below, retest pending.
+- [x] Fixes after the first walkthrough (decided 2026-10-19):
+  - Table focus follows any focused cell (VoiceOver, click), so arrow keys continue from there and the cell scrolls into view; before, a stale position made focus jump to another column.
+  - One tab stop into the table: Tab goes straight to the active cell; the scroll area is a tab stop (group "Table") only while that cell is scrolled out of the DOM.
+  - Header cells: name from `aria-label`, visible name `aria-hidden`, menu button named "Column menu", resize handle hidden (see Phase 5), so a header is read as "label0, Column menu" instead of repeating the name.
+  - Rows named "Column headers" / "Row N" instead of their whole content (to be confirmed with VoiceOver).
+  - Grid named "Table" / "Search results" instead of the file name.
+  - Headers described by "Select a column header to sort" (`aria-describedby`); a polite status announces "Sorted by label1, ascending" / "Sorted by row number (file order)". The help dialog has a Table section on sorting.
+  - Help: modal dialog with Close (see 4.2).
+  - Search form order: mode → column checkboxes (directly after Columns) → Extended search → "Options changed" note below the options. No arrow keys between checkboxes (standard behaviour is one Tab stop each).
+  - File selector moved out of the dark header to its own row above the search, with the visible label "Choose file".
+  - Reflow (1.4.10): the page scrolls when the window is small or zoomed; table and views keep a minimum height of 12rem. Before, at 400 % the table got 0 px and nothing scrolled.
+  - Not app issues: VoiceOver reading the whole page on load (VoiceOver Utility → Web setting); Safari reading a `<select>` as "value, label, pop-up button"; VO+arrows visiting a radio button and then its text.
 - [x] Update `README.md` (pnpm commands, Solid, features, data, deployment).
 - ResizeObserver "loop completed with undelivered notifications" (seen once on 2026-10-16) was not reproduced on 2026-10-19 while switching lenses and resizing. Per [MDN](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors) it means a resize was deferred to the next frame; it is harmless unless it repeats. Likely source: the JSON preview feedback loop fixed above.
 
 #### Manual checklist (keyboard + VoiceOver, Safari on macOS)
 Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-only, VO+arrows to read.
 1. **Start**: page title "DNS Tapir hyparquet" is read; VO+U (rotor) lists the heading "DNS Tapir", the landmarks main and search.
-2. **File selector**: Tab reaches "Parquet file, pop-up button"; changing file does not move focus; the table shows the new file.
-3. **Search form**: Tab order is search field → Search → Search help → Domain/Columns → Extended search. Each is read with its label.
+- forsätter läsa hela filen.
+- läser parquetfil-namnet innan den talar om at det är en menu. läser parquetfilnamnet två gånger (en i början en i slutet)
+
+2. **File selector**: Tab reaches "Choose file, pop-up button" (now below the dark header, above the search); changing file does not move focus; the table shows the new file.
+- OK
+
+3. **Search form**: Tab order is search field → Search → Help → Domain/Columns → (label0–label9 in Columns mode) → Extended search. Each is read with its label.
+- Order OK
+- Läser "Search by Group --> Search by --> Domain, selected, radiobutton, 1 of 2 --> Domain --> Columns, selected, radiobutton, 1 of 2 --> Columns"
+
 4. **Validation**: type `a`, Enter → "Enter at least 2 characters." is announced; the field is read as invalid.
+- OK
+
 5. **Columns**: choose Columns → the label0–label9 checkboxes appear in a group "Columns"; uncheck label1 → "Choose at least one column to search." is announced.
-6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; on the Search button VoiceOver reads "Options changed – press Search to update."
+- validation att välja minst en OK
+- När man valt "columns" måste man tabba igenom allt via right arrow, går ej att lkomma direkt till kolumnvalen. överlag bör man kunna tabba upp/ner höger/vänster
+
+6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; "Options changed – press Search to update." appears below the options; on the Search button VoiceOver reads it.
+- OK
+- Texten "Options changed – press Search to update." bör ligga under sökalternativen
+
 7. **Result**: search `office` → "2 matching rows" (or similar) is announced without moving focus.
-8. **Help**: activate "Search help" → the help text opens and can be read with VO+arrows; Esc closes it and focus stays on the button.
-9. **Table, entering**: Tab to the table area, then Enter (or Tab) → focus on the "Row number" header; arrows move cell by cell; VoiceOver reads row/column position and header names.
-10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible.
-11. **Sorting**: Enter on a header sorts; VoiceOver reads the sort state ("ascending"/"descending"); Enter on "Row number" returns to file order.
-12. **Column menu**: from a focused header, Tab to "Column menu for …", Enter opens it; arrows move between items; Esc closes it and returns focus.
-13. **Resize**: Tab on to "Resize column …"; arrows change width and the new width is read; Enter fits to content; Esc returns to the header.
+- OK
+
+8. **Help**: activate "Help" → a dialog "Help" opens with focus on Close; Tab stays inside the dialog; the text (incl. the Table section on sorting) can be read with VO+arrows; Esc or Close closes it and focus returns to the Help button.
+- Open/close OK
+- går att tabba på underliggande objekt vilket blir förvirrande
+
+9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", with the hint "Select a column header to sort"; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
+- Tab funkar MEN:
+- vid arrow right läses label upp tre gånger, vid arrow left bara en gång
+10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible, also after moving with VO+arrows.
+- efter label7 h'nger inte focusringen med, dock läses rätt kolumn upp
+11. **Sorting**: Enter (or VO+Space) on a header sorts; VoiceOver announces "Sorted by label1, ascending"; Enter on "Row number" announces "Sorted by row number (file order)".
+- kommer inte åt pilarna, sorterar om jag klickar på titeln (ex label1) utan att voiceover läser upp
+
+12. **Column menu**: from a focused header, Tab to "Column menu", Enter opens it; arrows move between items; Esc closes it and returns focus.
+- OK
+
+13. **Resize**: in the column menu, Wider / Narrower change the width by 50 px, Fit to content restores the automatic width; focus returns to the menu button. With the mouse, dragging the header edge still works.
+- OK
+
 14. **Lenses**: the "View: …" button opens the lens menu; Metadata: JSON toggles are read as buttons with expanded/collapsed; Layout and Grid: the scroll areas can be focused and scrolled with arrows; Grid: "Show as table" opens a table with caption and headers.
-15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows (1.4.10) – note what does not.
+- OK
+
+15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows and the page scrolls (1.4.10) – note what does not.
+- ok vid 200%. vid 400% syns enbart search då den är fast. man bör kunna scrolla upp den
+
 16. **Focus visibility**: on every step above the focused element has a clearly visible outline.
 Note failures with step number, browser and what VoiceOver said.
 
 ### Open decisions – after Phase 8
 Need a decision from the client; implement together with any changes that come out of Phase 8.
-- [ ] **WCAG 2.5.7 Dragging Movements** (AA): column width can only be changed by pointer through dragging the resize handle. The keyboard alternative does not count; a single-pointer alternative is required ([Understanding 2.5.7](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html)). The same gap exists in HighTable and in the original app. Options: (a) column menu items "Wider" / "Narrower" (±10 or ±100 px) and "Fit to content"; (b) a width number input in the column menu; (c) both. Until then this is a known non-conformance.
+- [x] **WCAG 2.5.7 Dragging Movements** – decided 2026-10-19: column menu items Wider / Narrower (±50 px) and Fit to content; the drag handle is pointer-only.
 - [ ] **Search time span** (requested 2026-10-19, deferred until the shape of real files is known). Facts from the sample files: `start_time` is `TIMESTAMP_MICROS`, `isAdjustedToUTC: true`, and **each file holds a single value** (e.g. `2026-04-15T09:19:00.851Z`), so a span would select whole files. To decide: do real files hold several `start_time` values; input in UTC or local time; inclusive bounds and optional start/end; may a span alone (no query) be searched, which would change the 2-character rule. Row group min/max statistics can skip files/row groups outside the span without reading them.
 - [ ] **Secondary sort keys** (found in Phase 8; client decision 2026-10-19: leave as is for now – the secondary order is not clear visually either, so it is a general design question rather than a screen-reader one. Known possible non-conformance; revisit together with the other open decisions): with a multi-column sort, the 2nd, 3rd … sort columns show their arrow in `#bbb` (≈ 1.7:1 on `#f0f0f0`) and differ from the primary column only by colour; screen readers get `aria-sort` on the primary column only, so the secondary order is not exposed at all. Possible conflicts: WCAG 1.4.1 Use of Color, 1.4.11 Non-text Contrast, 1.3.1 Info and Relationships. Options: (a) show the sort position (1, 2, …) next to the arrow with ≥ 3:1 contrast and add it to the header's description (e.g. "sorted 2nd, ascending"); (b) darker arrows for all sorted columns plus (a); (c) leave as is (HighTable behaviour). The unsorted ⇅ marks are decorative and can stay light.
 
