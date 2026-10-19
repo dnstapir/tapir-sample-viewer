@@ -3,6 +3,7 @@ import { stringify, toggleColumn } from 'hightable/dataframe'
 import type { JSX } from 'solid-js'
 import { For, Show, createEffect, createMemo, createSignal, createUniqueId, on, onCleanup, onMount, untrack } from 'solid-js'
 import Dropdown from '../components/Dropdown.tsx'
+import { isAbortError } from '../lib/abort.ts'
 import type { Widths } from '../lib/columnWidths.ts'
 import { adjustWidths, loadWidths, minColumnWidth, saveWidths, widthsStorageKey } from '../lib/columnWidths.ts'
 import { computeSlice, scrollTopForRow } from '../lib/viewport.ts'
@@ -23,10 +24,6 @@ interface Position {
 }
 
 const rowsPerPage = 20
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof Error && error.name === 'AbortError'
-}
 
 function widthStyle(width: number | undefined): JSX.CSSProperties | undefined {
   return width === undefined ? undefined : { 'min-width': `${width}px`, 'max-width': `${width}px` }

@@ -53,15 +53,15 @@ Run `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done
 ```
 src/
   index.tsx            # render(() => <App/>, #app)
-  App.tsx              # dataset list + selected dataset resource
+  App.tsx              # dataset list, selected dataset, submitted search + result resources
   Layout.tsx           # title, content wrapper, ErrorBar
-  Page.tsx             # header, file select, lens switch
+  Page.tsx             # header, file select, search bar, lens switch
   components/          # Dropdown, ErrorBar, Json (Solid replacements for hyperparam)
   lenses/              # ParquetMetadata, ParquetLayout, ParquetGrid
   table/               # virtualized sortable data grid (own windowing, see src/lib/viewport.ts)
   search/              # SearchBar, SearchHelp
   lib/                 # pure TS: format, layout, grid, source, dataset, parquetDataFrame,
-                       #          search, searchScan, filteredDataFrame, concatDataFrame
+                       #          search, searchScan, filteredDataFrame, concatDataFrame, abort
   parquets/            # bundled sample .parquet files
 public/                # TAPIR logos
 test/                  # vitest

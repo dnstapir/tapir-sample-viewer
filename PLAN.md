@@ -92,7 +92,7 @@ Requirement (client): `label1` is the primary search target; searching on a full
 
 **Search options** (all apply only on submit, see Trigger)
 - **Mode** (radio group): **Domain** (default, DNS matching below) or **Columns**.
-- **Columns** (only in Columns mode): checkboxes `label0`–`label9`, one or more; default `label1`. At least one must be checked (validation message otherwise). `label5`–`label9` are empty in all sample files but stay selectable, as real data may use them.
+- **Columns** (only in Columns mode; the checkboxes are not rendered in Domain mode): checkboxes `label0`–`label9`, one or more; default `label1`. At least one must be checked: as soon as all are unchecked, the message "Choose at least one column to search." is shown (before any submit, so the user knows what to do in advance – cognitive accessibility), linked to the group with `aria-describedby`; submitting in that state does not search. `label5`–`label9` are empty in all sample files but stay selectable, as real data may use them.
 - **Extended search** (checkbox): search all files instead of the selected one.
 
 **Trigger**
@@ -127,13 +127,15 @@ Requirement (client): `label1` is the primary search target; searching on a full
 | --- | --- | --- |
 | Off | empty | Selected file, unfiltered |
 | Off | ≥ 2 chars | Matches in the selected file |
-| On | empty / < 2 chars | No table, no file loaded; hint "Enter at least 2 characters to search all files." |
+| On | empty / < 2 chars | Not submitted: validation message "Enter at least 2 characters to search all files."; the current table stays (with options applied on submit, an empty "no table" state is no longer needed – changed 2026-10-19) |
 | On | ≥ 2 chars | Matches from **all files** in one table with an extra **File** column |
 
-- While Extended search is on, the file selector is disabled.
+- While an Extended search is applied, the file selector is disabled.
 - Progress indicator "Searching file N of M…" during multi-file scans.
-- Metadata per file is loaded on first search and cached.
+- Metadata per file is loaded on first use and cached (`createDataSetLoader`), shared with the file selector.
 - All files share the same schema (confirmed by client), so results are simply stacked.
+- Row numbers in results are the original row numbers in each file.
+- Domain mode also rejects empty parts (`.se`, `www..se`) and more than 10 parts (only `label0`–`label9` exist).
 
 **Help**: an **(i)** button next to the search field opens a native `popover="auto"` (light dismiss, Esc; Baseline 2024: Chrome/Edge 114, Firefox 125, Safari 17 – [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/popover)). Draft text (to be reviewed with the client once search is built, see Phase 6):
 
@@ -300,14 +302,18 @@ Deviations from HighTable (accessibility):
 - Column menu has no sort item; sorting is done on the header only.
 
 ### Phase 6 – Search (D8)
-- [ ] `src/lib/search.ts`: normalise + parse query → Domain: `{ substring: { label, value }, exact: { label, value }[] }`; Columns: `{ columns, value }`; `matches(row)`; unit tests for every row of the 4.2 table, Columns mode (OR over columns, substring) and the edge cases (trailing dot, uppercase, > 5 labels, empty, no column selected).
-- [ ] `src/lib/searchScan.ts`: scan required label columns per row group, return matching row indexes; honour `AbortSignal`; tests vs. a brute-force `parquetReadObjects` filter on sample files.
-- [ ] `src/lib/filteredDataFrame.ts` + tests.
-- [ ] `src/lib/concatDataFrame.ts` (adds `File` column) + tests.
-- [ ] `SearchBar`: input, Search button, Enter submit, mode radio group, column checkboxes (`<fieldset>` + `<legend>`), Extended search checkbox, validation (min length 2, at least one column), "Options changed" note, progress text, live region (4.3).
-- [ ] `SearchHelp`: (i) button + `popover="auto"` with the 4.2 help text.
-- [ ] Wire into `Page`/`App`: draft vs. submitted search state, `createResource` for results, disable file selector in extended mode, empty-state hint.
+- [x] `src/lib/search.ts`: normalise + parse query → predicate (`columns` it reads + `matches(row)`) for Domain and Columns mode, validation messages, `sameOptions`. Tests: every row of the 4.2 table, Columns mode (OR, substring), trailing dot, uppercase, empty, too short, empty parts, > 10 parts, labels missing in data, no column selected.
+- [x] `src/lib/searchScan.ts`: `scanRows` reads only the needed label columns, one row group at a time (abort checked between row groups); `searchDataSet`, `searchAll` (progress callback). Tests vs. a brute-force filter of all rows on every sample file.
+- [x] `src/lib/filteredDataFrame.ts` (fetches source rows in consecutive runs) + tests.
+- [x] `src/lib/concatDataFrame.ts` (adds `File` column, forwards events of all parts) + tests.
+- [x] `SearchBar`: `<form role="search">`, labelled `<input type="search">`, Search button, mode radio group, column checkboxes (`<fieldset>` + `<legend>`, only in Columns mode), Extended search checkbox, validation (`role="alert"`, `aria-invalid`, `aria-describedby`), "Choose at least one column" note (`role="status"`, before submit), "Options changed" note, result/progress status (`role="status"`). Component tests.
+- [x] `SearchHelp`: (i) button (name "Search help", 28×28 px) + `popover="auto"` with the 4.2 help text.
+- [x] Wire into `Page`/`App`: last submitted search in `App`, `createResource` for results, previous search aborted on submit/file change, file selector disabled while an Extended search is applied, view header shows "N of M rows" / "N rows from F files".
 - [ ] Review the help text together with the client once search works; update 4.2 and `SearchHelp`.
+- [ ] Review with the client: in Extended search the Metadata/Layout/Grid lenses still show the selected file (the disabled file selector shows which).
+
+Findings:
+- Checked in the browser on the sample files: `office` → 2 of 66 rows; `microsoft.com` → 4 rows (incl. `microsoftonline`, substring on label1); Columns `label0` + `se` → 1 row; Extended → 1 row in 5 files with File column, file selector disabled. All search controls pass WCAG 2.5.8 (radios/checkboxes 13 px pass by spacing).
 
 ### Phase 7 – CI / deploy
 - [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.

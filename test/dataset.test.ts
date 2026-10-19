@@ -1,6 +1,7 @@
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { listDataSets, loadDataSet } from '../src/lib/dataset.ts'
+import { createDataSetLoader, listDataSets, loadDataSet } from '../src/lib/dataset.ts'
+import type { DataSet } from '../src/lib/dataset.ts'
 import type { Sample } from './samples.ts'
 import { loadSamples } from './samples.ts'
 
@@ -69,5 +70,19 @@ describe('dataset', () => {
       // whole file came with the size probe; nothing else is downloaded
       expect(server.requests).toHaveLength(1)
     }
+  })
+
+  it('createDataSetLoader loads each URL once and retries failed loads', async () => {
+    const dataSet = { name: 'a' } as DataSet
+    const load = vi.fn()
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValue(dataSet)
+    const cached = createDataSetLoader(load)
+    const entry = { name: 'a', url: '/a.parquet' }
+
+    await expect(cached(entry)).rejects.toThrow('offline')
+    expect(await cached(entry)).toBe(dataSet)
+    expect(await cached(entry)).toBe(dataSet)
+    expect(load).toHaveBeenCalledTimes(2)
   })
 })
