@@ -88,7 +88,7 @@ describe('Table', () => {
     const header = within(grid).getByRole('columnheader', { name: 'label1' })
     const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
     for (const cell of [header, corner]) {
-      expect(document.getElementById(cell.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Select a column header to sort')
+      expect(document.getElementById(cell.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Select to sort')
     }
     const status = screen.getByRole('status')
     expect(status.textContent).toBe('')

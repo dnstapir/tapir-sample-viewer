@@ -98,8 +98,10 @@
   padding: 16px 20px;
 }
 .search-help-close {
-  float: right;
-  margin-left: 12px;
+  margin-top: 12px;
+}
+.search-help h2:focus {
+  outline: none;
 }
 .search-help h2 {
   margin-top: 0;

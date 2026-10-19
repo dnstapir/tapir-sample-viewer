@@ -22,6 +22,13 @@
 .table * {
   box-sizing: border-box;
 }
+/* short windows (e.g. 400 % zoom): the page scrolls first, then the table fills the window (WCAG 1.4.10) */
+@media (max-height: 40rem) {
+  .table {
+    flex: none;
+    height: 100vh;
+  }
+}
 
 .table-scroll {
   flex: 1;

@@ -68,7 +68,7 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
         aria-invalid={queryError() ? 'true' : undefined}
         aria-describedby={queryError() ? `${id}-error` : undefined}
       />
-      <button type="submit" aria-describedby={optionsChanged() ? `${id}-pending` : undefined}>Search</button>
+      <button type="submit">Search</button>
       <SearchHelp />
     </div>
     <p id={`${id}-error`} class="search-error" role="alert">{queryError()}</p>
@@ -116,8 +116,9 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
       Extended search (all files)
     </label>
 
+    {/* read where it stands, before the table; not tied to the Search button (client decision 2026-10-19) */}
     <Show when={optionsChanged()}>
-      <p id={`${id}-pending`} class="search-note">Options changed – press Search to update.</p>
+      <p class="search-note">Options changed – press Search to update.</p>
     </Show>
     <p class="search-status" role="status">{props.status}</p>
   </form>

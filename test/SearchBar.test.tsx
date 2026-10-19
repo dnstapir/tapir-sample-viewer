@@ -63,13 +63,13 @@ describe('SearchBar', () => {
 
     fireEvent.click(screen.getByRole('checkbox', { name: 'Extended search (all files)' }))
     expect(onSubmit).not.toHaveBeenCalled()
-    const note = screen.getByText('Options changed – press Search to update.')
-    expect(button.getAttribute('aria-describedby')).toBe(note.id)
+    expect(screen.getByText('Options changed – press Search to update.')).toBeTruthy()
+    // read where it stands, not as a description of the Search button
+    expect(button.hasAttribute('aria-describedby')).toBe(false)
 
     search('svt')
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ extended: true }))
     expect(screen.queryByText(/Options changed/)).toBeNull()
-    expect(button.getAttribute('aria-describedby')).toBeNull()
   })
 
   it('shows the column checkboxes only in Columns mode, with label1 checked by default', () => {
@@ -120,8 +120,11 @@ describe('SearchBar', () => {
     fireEvent.click(help)
     expect(showModal).toHaveBeenCalledTimes(1)
     const dialog = screen.getByRole('dialog', { name: 'Help' })
+    // reading starts at the heading, not at the Close button
+    expect(document.activeElement).toBe(within(dialog).getByRole('heading', { name: 'Help' }))
     expect(dialog.textContent).toContain('www.svt.se')
     expect(dialog.textContent).toContain('Click or select a column header to sort. Click/select Row number header to restore file order.')
+    expect(dialog.querySelector('button:last-of-type')?.textContent).toBe('Close')
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
     expect(close).toHaveBeenCalledTimes(1)

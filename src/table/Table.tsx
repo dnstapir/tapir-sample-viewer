@@ -27,7 +27,7 @@ interface Position {
 
 const rowsPerPage = 20
 const widthStep = 50
-const sortHint = 'Select a column header to sort'
+const sortHint = 'Select to sort'
 
 function sortMessage(order: OrderBy): string {
   if (order.length === 0) return 'Sorted by row number (file order)'
@@ -194,6 +194,30 @@ export default function Table(props: TableProps): JSX.Element {
     return scroller?.querySelector<HTMLElement>(`tr[aria-rowindex="${row}"] > [aria-colindex="${col}"]`) ?? null
   }
 
+  /**
+   * Scrolls the table so the cell is not hidden behind the sticky header row or row numbers.
+   * Done by hand: scrollIntoView on sticky cells is not reliable when focus comes from VoiceOver.
+   */
+  function reveal(cell: HTMLElement) {
+    if (!scroller) return
+    const view = scroller.getBoundingClientRect()
+    const rect = cell.getBoundingClientRect()
+    // sticky cells never need scrolling along their sticky axis
+    if (cell.getAttribute('aria-colindex') !== '1') {
+      const left = view.left + header().cornerWidth
+      const right = view.left + scroller.clientWidth
+      if (rect.left < left) scroller.scrollLeft -= left - rect.left
+      else if (rect.right > right) scroller.scrollLeft += Math.min(rect.right - right, rect.left - left)
+    }
+    if (cell.parentElement?.getAttribute('aria-rowindex') !== '1') {
+      const top = view.top + header().height
+      const bottom = view.top + scroller.clientHeight
+      if (rect.top < top) scroller.scrollTop -= top - rect.top
+      else if (rect.bottom > bottom) scroller.scrollTop += rect.bottom - bottom
+      setScrollTop(scroller.scrollTop)
+    }
+  }
+
   function goTo(target: Position) {
     const next = {
       row: Math.min(Math.max(target.row, 1), rowCount()),
@@ -215,7 +239,7 @@ export default function Table(props: TableProps): JSX.Element {
     }
     const element = cellElement(next)
     if (element) {
-      element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      reveal(element)
       element.focus({ preventScroll: true })
     }
   }
@@ -231,17 +255,16 @@ export default function Table(props: TableProps): JSX.Element {
     return row === 1 || row - 2 >= range().start && row - 2 < range().end
   }
 
-  // focus can also arrive from a screen reader or a click; keep the roving position in sync
+  // focus can also arrive from a screen reader (also on a menu button inside a header) or a click;
+  // keep the roving position in sync and the cell in view
   function onGridFocusIn(event: FocusEvent) {
-    const cell = event.target as HTMLElement
-    const row = Number(cell.parentElement?.getAttribute('aria-rowindex'))
-    const col = Number(cell.getAttribute('aria-colindex'))
-    if (!row || !col) return
+    const cell = (event.target as HTMLElement).closest<HTMLElement>('th[aria-colindex], td[aria-colindex]')
+    const row = Number(cell?.parentElement?.getAttribute('aria-rowindex'))
+    const col = Number(cell?.getAttribute('aria-colindex'))
+    if (!cell || !row || !col) return
     const current = position()
-    if (current.row !== row || current.col !== col) {
-      setPosition({ row, col })
-      cell.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-    }
+    if (current.row !== row || current.col !== col) setPosition({ row, col })
+    reveal(cell)
   }
 
   function onGridKeyDown(event: KeyboardEvent) {

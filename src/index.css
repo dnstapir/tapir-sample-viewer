@@ -185,6 +185,13 @@ main {
   white-space: pre-wrap;
   overflow-y: auto;
 }
+/* short windows (e.g. 400 % zoom): the page scrolls first, then the view fills the window (WCAG 1.4.10) */
+@media (max-height: 40rem) {
+  .viewer {
+    flex: none;
+    height: 100vh;
+  }
+}
 .placeholder {
   color: #444;
   padding: 16px 8px;

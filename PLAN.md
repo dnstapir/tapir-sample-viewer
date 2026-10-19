@@ -101,7 +101,7 @@ Requirement (client): `label1` is the primary search target; searching on a full
 - Submitting an empty query in normal scope shows the unfiltered selected file.
 - A new submit aborts a running search (`AbortController`).
 - Changing the selected file **clears the result** (the file is shown unfiltered); query and options stay in the controls.
-- Changing mode, columns or Extended search has **no effect until the next submit**. While these options differ from the last submitted search, a visible note **"Options changed – press Search to update."** is shown next to the Search button and referenced from it with `aria-describedby` (not a live region, so it is not announced on every checkbox change). Editing the query text alone does not show the note.
+- Changing mode, columns or Extended search has **no effect until the next submit**. While these options differ from the last submitted search, a visible note **"Options changed – press Search to update."** is shown below the options and read where it stands (not tied to the Search button – client decision 2026-10-19; not a live region, so it is not announced on every checkbox change). Editing the query text alone does not show the note.
 
 **Normalisation**: trim, lowercase; Domain mode also strips one trailing `.`.
 
@@ -137,7 +137,7 @@ Requirement (client): `label1` is the primary search target; searching on a full
 - Row numbers in results are the original row numbers in each file.
 - Domain mode also rejects empty parts (`.se`, `www..se`) and more than 10 parts (only `label0`–`label9` exist).
 
-**Help**: an **(i)** button (name "Help") next to the search field opens a modal `<dialog>` with a Close button (decided 2026-10-19, replaced `popover="auto"`, which left the page behind reachable by Tab). Esc, Close or a click on the backdrop closes it; focus returns to the button. Draft text (to be reviewed with the client once search is built, see Phase 6):
+**Help**: an **(i)** button (name "Help") next to the search field opens a modal `<dialog>` (decided 2026-10-19, replaced `popover="auto"`, which left the page behind reachable by Tab). Focus moves to the heading "Help" so reading starts at the top; the Close button comes last. Esc, Close or a click on the backdrop closes it; focus returns to the button. Draft text (to be reviewed with the client once search is built, see Phase 6):
 
 > **Search**
 > Type at least 2 characters and press Enter or click Search. Changed options take effect when you search again.
@@ -338,53 +338,60 @@ Findings:
   - Header cells: name from `aria-label`, visible name `aria-hidden`, menu button named "Column menu", resize handle hidden (see Phase 5), so a header is read as "label0, Column menu" instead of repeating the name.
   - Rows named "Column headers" / "Row N" instead of their whole content (to be confirmed with VoiceOver).
   - Grid named "Table" / "Search results" instead of the file name.
-  - Headers described by "Select a column header to sort" (`aria-describedby`); a polite status announces "Sorted by label1, ascending" / "Sorted by row number (file order)". The help dialog has a Table section on sorting.
+  - Headers described by a hint (`aria-describedby`, now "Select to sort"); a polite status announces "Sorted by label1, ascending" / "Sorted by row number (file order)". The help dialog has a Table section on sorting.
   - Help: modal dialog with Close (see 4.2).
   - Search form order: mode → column checkboxes (directly after Columns) → Extended search → "Options changed" note below the options. No arrow keys between checkboxes (standard behaviour is one Tab stop each).
   - File selector moved out of the dark header to its own row above the search, with the visible label "Choose file".
   - Reflow (1.4.10): the page scrolls when the window is small or zoomed; table and views keep a minimum height of 12rem. Before, at 400 % the table got 0 px and nothing scrolled.
   - Not app issues: VoiceOver reading the whole page on load (VoiceOver Utility → Web setting); Safari reading a `<select>` as "value, label, pop-up button"; VO+arrows visiting a radio button and then its text.
+- [x] Fixes after the second walkthrough (Chrome + VoiceOver, decided 2026-10-19):
+  - "Options changed" is no longer a description of the Search button; it is read where it stands.
+  - Help dialog: focus on the heading when opened, Close last.
+  - Sort hint shortened to "Select to sort". "Column menu" stays in the header reading (client decision).
+  - Scrolling a focused cell into view is done by hand (horizontal past the row numbers, vertical below the header) instead of `scrollIntoView`, and also when focus lands on a button inside a header. With "Synchronise keyboard focus and VoiceOver cursor" on (client's setting), VO+arrows move focus, so the table follows. Checked in Chrome: a header far right, a menu button in the last header and a data cell far down/right all scroll into view.
+  - Short windows (height ≤ 40rem, e.g. 400 % zoom): the table and views get the full window height, so the page scrolls first and the table then fills the window. Normal window: no outer scrollbar (checked).
+  - Column choice stays as checkboxes (client asked for what works best for mouse and screen-reader users): native, recognised by both, read as "label1, checkbox, checked"; one Tab stop each is the expected behaviour. A toolbar of toggle buttons was considered (one Tab stop, arrows) but looks and reads less like "choose several".
+  - Tab ending at the last cell and moving on to the browser is expected (the table is the last focusable element).
 - [x] Update `README.md` (pnpm commands, Solid, features, data, deployment).
 - ResizeObserver "loop completed with undelivered notifications" (seen once on 2026-10-16) was not reproduced on 2026-10-19 while switching lenses and resizing. Per [MDN](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors) it means a resize was deferred to the next frame; it is harmless unless it repeats. Likely source: the JSON preview feedback loop fixed above.
 
 #### Manual checklist (keyboard + VoiceOver, Safari on macOS)
 Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-only, VO+arrows to read.
 1. **Start**: page title "DNS Tapir hyparquet" is read; VO+U (rotor) lists the heading "DNS Tapir", the landmarks main and search.
-- forsätter läsa hela filen.
-- läser parquetfil-namnet innan den talar om at det är en menu. läser parquetfilnamnet två gånger (en i början en i slutet)
 
 2. **File selector**: Tab reaches "Choose file, pop-up button" (now below the dark header, above the search); changing file does not move focus; the table shows the new file.
-- OK
+- Vid automatisk tabning läses "choose file". 
+- Vid automatisk tabning läses filnamnet två gånger
+- Hoppar över Choose file vid tab, går direkt till fil. 
+- Fil läses med filnamn först, därefter choose file mm.. se screenshot
 
 3. **Search form**: Tab order is search field → Search → Help → Domain/Columns → (label0–label9 in Columns mode) → Extended search. Each is read with its label.
-- Order OK
-- Läser "Search by Group --> Search by --> Domain, selected, radiobutton, 1 of 2 --> Domain --> Columns, selected, radiobutton, 1 of 2 --> Columns"
+-  Options changed finns nu med i searchbutton vilket inte känns logiskt. bör läsas av voiceover där det står med text istället (innan tabell)
 
 4. **Validation**: type `a`, Enter → "Enter at least 2 characters." is announced; the field is read as invalid.
-- OK
+
 
 5. **Columns**: choose Columns → the label0–label9 checkboxes appear in a group "Columns"; uncheck label1 → "Choose at least one column to search." is announced.
-- validation att välja minst en OK
-- När man valt "columns" måste man tabba igenom allt via right arrow, går ej att lkomma direkt till kolumnvalen. överlag bör man kunna tabba upp/ner höger/vänster
+- går ej att komma åt columnsalternativet med tab, ebart med cntrl + optiol + pilar / space
 
 6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; "Options changed – press Search to update." appears below the options; on the Search button VoiceOver reads it.
-- OK
-- Texten "Options changed – press Search to update." bör ligga under sökalternativen
+- se nr 3
 
 7. **Result**: search `office` → "2 matching rows" (or similar) is announced without moving focus.
-- OK
 
 8. **Help**: activate "Help" → a dialog "Help" opens with focus on Close; Tab stays inside the dialog; the text (incl. the Table section on sorting) can be read with VO+arrows; Esc or Close closes it and focus returns to the Help button.
-- Open/close OK
-- går att tabba på underliggande objekt vilket blir förvirrande
+- fokus när man öppar hamnar på closebutton, går inte att komma åt texten alls. fokus bör hamna på rubrik
 
-9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", with the hint "Select a column header to sort"; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
-- Tab funkar MEN:
-- vid arrow right läses label upp tre gånger, vid arrow left bara en gång
+9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", with the hint "Select to sort"; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
+- "Select to sort" bör räcka här.
+- ändå rörigt, se screenshot
+
+
 10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible, also after moving with VO+arrows.
-- efter label7 h'nger inte focusringen med, dock läses rätt kolumn upp
+- fokus hänger inte med fastnar efter label7
+
 11. **Sorting**: Enter (or VO+Space) on a header sorts; VoiceOver announces "Sorted by label1, ascending"; Enter on "Row number" announces "Sorted by row number (file order)".
-- kommer inte åt pilarna, sorterar om jag klickar på titeln (ex label1) utan att voiceover läser upp
+- OK
 
 12. **Column menu**: from a focused header, Tab to "Column menu", Enter opens it; arrows move between items; Esc closes it and returns focus.
 - OK
@@ -396,10 +403,12 @@ Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-
 - OK
 
 15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows and the page scrolls (1.4.10) – note what does not.
-- ok vid 200%. vid 400% syns enbart search då den är fast. man bör kunna scrolla upp den
+- funkar lite bättre nu, men vill kunna scrolla hela sidan - nu syns fortfarande en del av search ocg går inte att scrolla längre
 
 16. **Focus visibility**: on every step above the focused element has a clearly visible outline.
 Note failures with step number, browser and what VoiceOver said.
+- fokusring följder inte med eftedr label7 med läser upp komande kolumner korrekt
+
 
 ### Open decisions – after Phase 8
 Need a decision from the client; implement together with any changes that come out of Phase 8.
