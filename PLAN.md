@@ -130,7 +130,7 @@ Requirement (client): `label1` is the primary search target; searching on a full
 | On | empty / < 2 chars | Not submitted: validation message "Enter at least 2 characters to search all files."; the current table stays (with options applied on submit, an empty "no table" state is no longer needed – changed 2026-10-19) |
 | On | ≥ 2 chars | Matches from **all files** in one table with an extra **File** column |
 
-- While an Extended search is applied, the file selector is disabled.
+- The file selector follows the Extended search **checkbox** directly (decided 2026-10-19, an exception to "options apply on submit"): disabled while it is checked, enabled as soon as it is unchecked. Choosing a file then clears the all-files result and shows that file unfiltered, like any file change; otherwise the result stays until the next submit.
 - Progress indicator "Searching file N of M…" during multi-file scans.
 - Metadata per file is loaded on first use and cached (`createDataSetLoader`), shared with the file selector.
 - All files share the same schema (confirmed by client), so results are simply stacked.
@@ -308,7 +308,7 @@ Deviations from HighTable (accessibility):
 - [x] `src/lib/concatDataFrame.ts` (adds `File` column, forwards events of all parts) + tests.
 - [x] `SearchBar`: `<form role="search">`, labelled `<input type="search">`, Search button, mode radio group, column checkboxes (`<fieldset>` + `<legend>`, only in Columns mode), Extended search checkbox, validation (`role="alert"`, `aria-invalid`, `aria-describedby`), "Choose at least one column" note (`role="status"`, before submit), "Options changed" note, result/progress status (`role="status"`). Component tests.
 - [x] `SearchHelp`: (i) button (name "Search help", 28×28 px) + `popover="auto"` with the 4.2 help text.
-- [x] Wire into `Page`/`App`: last submitted search in `App`, `createResource` for results, previous search aborted on submit/file change, file selector disabled while an Extended search is applied, view header shows "N of M rows" / "N rows from F files".
+- [x] Wire into `Page`/`App`: last submitted search in `App`, `createResource` for results, previous search aborted on submit/file change, file selector disabled while the Extended search checkbox is checked, view header shows "N of M rows" / "N rows from F files".
 - [ ] Review the help text together with the client once search works; update 4.2 and `SearchHelp`.
 - [ ] Review with the client: in Extended search the Metadata/Layout/Grid lenses still show the selected file (the disabled file selector shows which).
 

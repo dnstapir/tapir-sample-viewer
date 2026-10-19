@@ -13,6 +13,8 @@ export interface SubmittedSearch {
 
 interface SearchBarProps {
   onSubmit: (search: SubmittedSearch) => void
+  /** the Extended search checkbox changed (applies to the file selector at once) */
+  onExtendedChange?: (extended: boolean) => void
   /** result or progress, announced politely */
   status: string
 }
@@ -87,7 +89,14 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
         </label>
       </fieldset>
       <label class="search-extended">
-        <input type="checkbox" checked={extended()} onChange={event => setExtended(event.currentTarget.checked)} />
+        <input
+          type="checkbox"
+          checked={extended()}
+          onChange={event => {
+            setExtended(event.currentTarget.checked)
+            props.onExtendedChange?.(event.currentTarget.checked)
+          }}
+        />
         Extended search (all files)
       </label>
     </div>

@@ -36,6 +36,8 @@ interface PageProps {
  */
 export default function Page(props: PageProps): JSX.Element {
   const [lens, setLens] = createSignal<Lens>('table')
+  // the file selector follows the checkbox, not the submitted search (decided 2026-10-19)
+  const [extendedChecked, setExtendedChecked] = createSignal(false)
   const lensItems = () => lenses.map(name => ({
     label: lensLabels[name],
     checked: lens() === name,
@@ -60,7 +62,7 @@ export default function Page(props: PageProps): JSX.Element {
       </h1>
       <select
         aria-label="Parquet file"
-        disabled={props.extended}
+        disabled={extendedChecked()}
         onChange={event => { props.onSelect(Number(event.currentTarget.value)) }}
       >
         <For each={props.entries}>
@@ -68,7 +70,11 @@ export default function Page(props: PageProps): JSX.Element {
         </For>
       </select>
     </header>
-    <SearchBar onSubmit={search => { props.onSearch(search) }} status={props.searchStatus} />
+    <SearchBar
+      onSubmit={search => { props.onSearch(search) }}
+      onExtendedChange={setExtendedChecked}
+      status={props.searchStatus}
+    />
     <Show when={props.dataSet} fallback={<p role="status" class="placeholder">{props.loading ? 'Loading…' : ''}</p>}>
       {dataSet => <>
         <div class="view-header">
