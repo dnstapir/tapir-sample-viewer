@@ -264,7 +264,7 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Sticky header, corner and row-number column; 1-based original row numbers.
 - [x] Sorting: click or Enter/Space on a header → `toggleColumn` (ascending → descending → none, multi-column); indicator; `aria-sort` on the primary column.
 - [x] Column widths (`src/lib/columnWidths.ts`): measured when data arrives, adjusted to fit the viewport (HighTable's algorithm), user widths persisted in `localStorage` per data set; resize by pointer drag or keyboard; double-click / Enter auto-sizes.
-- [x] Column menu (⋮, `Dropdown` rendered in a portal): sort order, hide column, show all columns.
+- [x] Column menu (⋮, `Dropdown` rendered in a portal): hide column, show all columns. The "Sort order" item was removed (decided 2026-10-19): it duplicated the header click and its label showed the current state while selecting it switched to the next one. The button is not rendered when the menu would be empty (single-column file, nothing hidden).
 - [x] Keyboard navigation: one tab stop (roving `tabindex`), arrows, Ctrl+arrows, Home/End, Ctrl+Home/End, PageUp/PageDown (20 rows); Enter/Space/Tab on the scroll area enters the grid.
 - [x] Copy: Ctrl/Cmd+C on a focused cell copies its text (HighTable feature; the earlier "not planned" note was wrong).
 - [x] Long values (> 100 characters) get a tooltip.
@@ -284,6 +284,7 @@ Deviations from HighTable (accessibility):
 - Resize handle is a focusable `separator` (APG window splitter) instead of a `spinbutton`.
 - Menu button 24×24 px and resize hit area 24 px wide (HighTable: 20×20 and 8 px), see 2.5.8 above.
 - Corner cell is a sortable "Row number" header that resets sorting (HighTable: empty cell with the hyparquet logo).
+- Column menu has no sort item; sorting is done on the header only.
 
 ### Phase 6 – Search (D8)
 - [ ] `src/lib/search.ts`: normalise + parse query → `{ substring: { label, value }, exact: { label, value }[] }`; `matches(row)`; unit tests for every row of the 4.2 table and the edge cases (trailing dot, uppercase, > 5 labels, empty).

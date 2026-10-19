@@ -397,8 +397,6 @@ interface ColumnHeaderProps {
   onExitResizer: () => void
 }
 
-const directionLabels = { ascending: 'Ascending', descending: 'Descending' } as const
-
 function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
   const orderIndex = () => props.orderBy.findIndex(item => item.column === props.column)
   const direction = () => orderIndex() >= 0 ? props.orderBy[orderIndex()].direction : undefined
@@ -409,12 +407,7 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     if (direction() === 'ascending') return `Press to sort by ${props.column} in descending order`
     return `Press to stop sorting by ${props.column}`
   }
-  const sortLabel = () => {
-    const current = direction()
-    return current ? directionLabels[current] : 'No sort'
-  }
   const menuItems = () => [
-    { label: `Sort order: ${sortLabel()}`, onSelect: () => { props.onToggleSort() } },
     ...props.canHide ? [{ label: 'Hide column', onSelect: () => { props.onHide() } }] : [],
     ...props.canShowAll ? [{ label: 'Show all columns', onSelect: () => { props.onShowAll() } }] : [],
   ]
@@ -445,15 +438,18 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
   >
     <span class="column-name">{props.column}</span>
     <span class="sort-indicator" aria-hidden="true">{indicator()}</span>
-    <Dropdown
-      label={<span aria-hidden="true">{'\u22ee'}</span>}
-      ariaLabel={`Column menu for ${props.column}`}
-      noCaret
-      buttonClass="column-menu-button"
-      tabIndex={props.tabIndex}
-      portal
-      items={menuItems()}
-    />
+    {/* a single-column file with nothing hidden has no menu actions */}
+    <Show when={menuItems().length > 0}>
+      <Dropdown
+        label={<span aria-hidden="true">{'\u22ee'}</span>}
+        ariaLabel={`Column menu for ${props.column}`}
+        noCaret
+        buttonClass="column-menu-button"
+        tabIndex={props.tabIndex}
+        portal
+        items={menuItems()}
+      />
+    </Show>
     <ColumnResizer
       column={props.column}
       width={props.width}

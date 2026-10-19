@@ -120,6 +120,7 @@ describe('Table', () => {
     const { grid } = renderTable()
     await loaded(grid)
     fireEvent.click(screen.getByRole('button', { name: 'Column menu for label1' }))
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Hide column'])
     fireEvent.click(screen.getByRole('menuitem', { name: 'Hide column' }))
     expect(within(grid).queryByRole('columnheader', { name: 'label1' })).toBeNull()
 
