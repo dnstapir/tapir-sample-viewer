@@ -57,7 +57,7 @@ Unmodified `vite-template-solid`: `App.tsx`/`Comp.tsx` hello world, `index.tsx` 
 | D5 | Data loading | Load metadata lazily for the selected file only; read row data on demand via range requests | Decided |
 | D6 | Dependency versions | Caret ranges (`^x.y.z`) in `package.json`; reproducibility via committed `pnpm-lock.yaml` + `--frozen-lockfile` in CI. Drop the exact-version assertion from `package.test.js` | Decided |
 | D7 | Docs language | English | Decided |
-| D8 | Search | DNS-structured domain search, see 4.2 | Decided |
+| D8 | Search | Two modes (Domain / Columns), Extended search, options apply on submit; see 4.2. Time span deferred | Decided (amended 2026-10-19) |
 | D9 | UI language | English for all UI text (column names from parquet are English) | Decided |
 | D10 | Accessibility | Comply with EU accessibility law: EN 301 549 (WCAG 2.1 AA for web); build to WCAG 2.2 AA, see 4.3 | Decided |
 | D11 | Data source | Parquet files bundled in `src/parquets/` for now; all file access goes through `src/lib/dataset.ts` / `source.ts` so the source can change later | Interim – final source deferred |
@@ -88,18 +88,24 @@ Sources: npm registry (`@tanstack/solid-virtual/latest` 3.13.47, `@tanstack/soli
 
 ### 4.2 D8 – search specification
 
-Requirement (client): `label1` is the primary search target; searching on a full domain name (`www.svt.se`) is desired.
+Requirement (client): `label1` is the primary search target; searching on a full domain name (`www.svt.se`) is desired. Amended 2026-10-19: the user can also choose which label columns to search.
+
+**Search options** (all apply only on submit, see Trigger)
+- **Mode** (radio group): **Domain** (default, DNS matching below) or **Columns**.
+- **Columns** (only in Columns mode): checkboxes `label0`–`label9`, one or more; default `label1`. At least one must be checked (validation message otherwise). `label5`–`label9` are empty in all sample files but stay selectable, as real data may use them.
+- **Extended search** (checkbox): search all files instead of the selected one.
 
 **Trigger**
 - `<input type="search">` + **Search** button. A search runs only on **Enter** or button click; no search-as-you-type.
-- Minimum query length: **2 characters** (normalised query) in both modes; shorter input shows a validation message.
-- Submitting an empty query in normal mode shows the unfiltered selected file.
+- Minimum query length: **2 characters** (normalised query) in both modes and both scopes; shorter input shows a validation message.
+- Submitting an empty query in normal scope shows the unfiltered selected file.
 - A new submit aborts a running search (`AbortController`).
-- Changing the selected file or toggling Extended search **clears the result**; the user must submit again.
+- Changing the selected file **clears the result** (the file is shown unfiltered); query and options stay in the controls.
+- Changing mode, columns or Extended search has **no effect until the next submit**. While these options differ from the last submitted search, a visible note **"Options changed – press Search to update."** is shown next to the Search button and referenced from it with `aria-describedby` (not a live region, so it is not announced on every checkbox change). Editing the query text alone does not show the note.
 
-**Normalisation**: trim, lowercase, strip one trailing `.`.
+**Normalisation**: trim, lowercase; Domain mode also strips one trailing `.`.
 
-**Matching (follows DNS structure)**
+**Matching – Domain mode (follows DNS structure)**
 1. Split the query on `.` and reverse: last part → `label0`, next → `label1`, …
 2. The **leftmost typed label** is a **substring** match; **all other** labels must match **exactly**.
 3. Labels deeper than the query are unconstrained → **subdomains are included**.
@@ -111,9 +117,11 @@ Requirement (client): `label1` is the primary search target; searching on a full
 | `svt.se` | `label0 = se` ∧ `label1` ⊇ `svt` | `svt.se`, `www.svt.se`, `svtplay.se` | `svt.com` |
 | `www.svt.se` | `label0 = se` ∧ `label1 = svt` ∧ `label2` ⊇ `www` | `www.svt.se`, `a.www.svt.se` | `api.svt.se` |
 
+**Matching – Columns mode**: a row matches if **any** selected column **contains** the query (OR, substring). Example: columns `label0`, query `se` → every domain under `.se` (and also e.g. `.sex`, since it is a substring match).
+
 **Results**: the table is **filtered to matching rows only**; sorting works on the filtered view.
 
-**Scope – "Extended search" toggle**
+**Scope – "Extended search" toggle** (state after submit)
 
 | Toggle | Query | Shown |
 | --- | --- | --- |
@@ -127,26 +135,31 @@ Requirement (client): `label1` is the primary search target; searching on a full
 - Metadata per file is loaded on first search and cached.
 - All files share the same schema (confirmed by client), so results are simply stacked.
 
-**Help**: an **(i)** button next to the search field opens a native `popover="auto"` (light dismiss, Esc; Baseline 2024: Chrome/Edge 114, Firefox 125, Safari 17 – [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/popover)). Draft text:
+**Help**: an **(i)** button next to the search field opens a native `popover="auto"` (light dismiss, Esc; Baseline 2024: Chrome/Edge 114, Firefox 125, Safari 17 – [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/popover)). Draft text (to be reviewed with the client once search is built, see Phase 6):
 
-> **Search by domain**
+> **Search**
+> Type at least 2 characters and press Enter or click Search. Changed options take effect when you search again.
+>
+> **Domain** – type a domain name or part of one:
 > - `svt` – domains whose name contains "svt" (e.g. svt.se, svtplay.se)
 > - `svt.se` – as above, but only under .se, including subdomains
 > - `www.svt.se` – subdomains of svt.se containing "www"
 >
-> The first part you type may be partial; the remaining parts must match exactly. Press Enter or click Search.
+> The first part you type may be partial; the remaining parts must match exactly.
 >
-> **Extended search** searches all files and requires at least 2 characters.
+> **Columns** – finds rows where any of the selected columns contains the text. `label0` is the top-level domain (e.g. se), `label1` the name below it (e.g. svt), and so on.
+>
+> **Extended search** searches all files and adds a File column.
 
 **Implementation (two-step, fits D4 option A)**
-1. Scan only the label columns the query needs (`label0`…`labelN`), row group by row group, via `parquetRead` with `onChunk` (`rowStart` gives original row numbers). Keep only matching row indexes; discard values.
+1. Scan only the label columns the search needs (Domain mode: `label0`…`labelN` from the query; Columns mode: the selected columns), row group by row group, via `parquetRead` with `onChunk` (`rowStart` gives original row numbers). Keep only matching row indexes; discard values.
 2. `filteredDataFrame(df, indexes)` maps view row `i` → source row `indexes[i]`; other columns stay lazily loaded. For Extended search, `concatDataFrame` stacks per-file filtered views and adds the `File` column. Wrap with `sortableDataFrame`.
 
 Not using hyparquet `filter` (see finding 8).
 
 **Known limits**
 - Only `label0`–`label4` hold strings in sample data → domains with > 5 labels cannot be fully matched.
-- "All domains under a TLD" (e.g. all `.se`) is not expressible; `se` without a dot searches `label1`.
+- "All domains under a TLD" (e.g. all `.se`) is not expressible in Domain mode (`se` without a dot searches `label1`); use Columns mode with `label0`.
 
 ### 4.3 D10 – accessibility
 
@@ -287,13 +300,14 @@ Deviations from HighTable (accessibility):
 - Column menu has no sort item; sorting is done on the header only.
 
 ### Phase 6 – Search (D8)
-- [ ] `src/lib/search.ts`: normalise + parse query → `{ substring: { label, value }, exact: { label, value }[] }`; `matches(row)`; unit tests for every row of the 4.2 table and the edge cases (trailing dot, uppercase, > 5 labels, empty).
+- [ ] `src/lib/search.ts`: normalise + parse query → Domain: `{ substring: { label, value }, exact: { label, value }[] }`; Columns: `{ columns, value }`; `matches(row)`; unit tests for every row of the 4.2 table, Columns mode (OR over columns, substring) and the edge cases (trailing dot, uppercase, > 5 labels, empty, no column selected).
 - [ ] `src/lib/searchScan.ts`: scan required label columns per row group, return matching row indexes; honour `AbortSignal`; tests vs. a brute-force `parquetReadObjects` filter on sample files.
 - [ ] `src/lib/filteredDataFrame.ts` + tests.
 - [ ] `src/lib/concatDataFrame.ts` (adds `File` column) + tests.
-- [ ] `SearchBar`: input, Search button, Enter submit, Extended search toggle, min-length validation (2), progress text, live region (4.3).
+- [ ] `SearchBar`: input, Search button, Enter submit, mode radio group, column checkboxes (`<fieldset>` + `<legend>`), Extended search checkbox, validation (min length 2, at least one column), "Options changed" note, progress text, live region (4.3).
 - [ ] `SearchHelp`: (i) button + `popover="auto"` with the 4.2 help text.
-- [ ] Wire into `Page`/`App`: query + scope signals, `createResource` for results, disable file selector in extended mode, empty-state hint.
+- [ ] Wire into `Page`/`App`: draft vs. submitted search state, `createResource` for results, disable file selector in extended mode, empty-state hint.
+- [ ] Review the help text together with the client once search works; update 4.2 and `SearchHelp`.
 
 ### Phase 7 – CI / deploy
 - [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.
@@ -311,6 +325,7 @@ Deviations from HighTable (accessibility):
 ### Open decisions – after Phase 8
 Need a decision from the client; implement together with any changes that come out of Phase 8.
 - [ ] **WCAG 2.5.7 Dragging Movements** (AA): column width can only be changed by pointer through dragging the resize handle. The keyboard alternative does not count; a single-pointer alternative is required ([Understanding 2.5.7](https://www.w3.org/WAI/WCAG22/Understanding/dragging-movements.html)). The same gap exists in HighTable and in the original app. Options: (a) column menu items "Wider" / "Narrower" (±10 or ±100 px) and "Fit to content"; (b) a width number input in the column menu; (c) both. Until then this is a known non-conformance.
+- [ ] **Search time span** (requested 2026-10-19, deferred until the shape of real files is known). Facts from the sample files: `start_time` is `TIMESTAMP_MICROS`, `isAdjustedToUTC: true`, and **each file holds a single value** (e.g. `2026-04-15T09:19:00.851Z`), so a span would select whole files. To decide: do real files hold several `start_time` values; input in UTC or local time; inclusive bounds and optional start/end; may a span alone (no query) be searched, which would change the 2-character rule. Row group min/max statistics can skip files/row groups outside the span without reading them.
 
 ## 7. Risks / open questions
 
