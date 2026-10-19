@@ -82,13 +82,14 @@ describe('Table', () => {
     expect(header.getAttribute('aria-sort')).toBe('none')
   })
 
-  it('describes headers as sortable and announces sort changes', async () => {
+  it('announces sort changes without extra hints on the headers', async () => {
     const { grid } = renderTable()
     await loaded(grid)
     const header = within(grid).getByRole('columnheader', { name: 'label1' })
     const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
     for (const cell of [header, corner]) {
-      expect(document.getElementById(cell.getAttribute('aria-describedby') ?? '')?.textContent).toBe('Select to sort')
+      expect(cell.hasAttribute('aria-describedby')).toBe(false)
+      expect(cell.hasAttribute('title')).toBe(false)
     }
     const status = screen.getByRole('status')
     expect(status.textContent).toBe('')
@@ -96,6 +97,27 @@ describe('Table', () => {
     expect(status.textContent).toBe('Sorted by label1, ascending')
     fireEvent.click(corner)
     expect(status.textContent).toBe('Sorted by row number (file order)')
+  })
+
+  it('sorts from the column menu, with the current choice checked', async () => {
+    const { grid } = renderTable()
+    await loaded(grid)
+    const header = within(grid).getByRole('columnheader', { name: 'label1' })
+    const values = expected.map(row => String(row.label1)).sort()
+    const checked = () => screen.getAllByRole('menuitemradio').filter(item => item.getAttribute('aria-checked') === 'true').map(item => item.textContent)
+
+    fireEvent.click(columnMenu(grid, 'label1'))
+    expect(checked()).toEqual(['Remove sort'])
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Sort descending' }))
+    expect(header.getAttribute('aria-sort')).toBe('descending')
+    expect(screen.getByRole('status').textContent).toBe('Sorted by label1, descending')
+    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(values[values.length - 1]) })
+
+    fireEvent.click(columnMenu(grid, 'label1'))
+    expect(checked()).toEqual(['Sort descending'])
+    fireEvent.click(screen.getByRole('menuitemradio', { name: 'Remove sort' }))
+    expect(header.getAttribute('aria-sort')).toBe('none')
+    expect(screen.getByRole('status').textContent).toBe('Sorted by row number (file order)')
   })
 
   it('resets a multi-column sort to file order from the row number header', async () => {

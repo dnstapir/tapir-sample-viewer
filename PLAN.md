@@ -279,7 +279,7 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - [x] Sticky header, corner and row-number column; 1-based original row numbers.
 - [x] Sorting: click or Enter/Space on a header → `toggleColumn` (ascending → descending → none, multi-column); indicator; `aria-sort` on the primary column.
 - [x] Column widths (`src/lib/columnWidths.ts`): measured when data arrives, adjusted to fit the viewport (HighTable's algorithm), user widths persisted in `localStorage` per data set; resize by pointer drag (double-click fits to content) or from the column menu.
-- [x] Column menu (⋮, `Dropdown` rendered in a portal, name "Column menu"): Wider, Narrower (±50 px), Fit to content, hide column, show all columns. The "Sort order" item was removed (decided 2026-10-19): it duplicated the header click and its label showed the current state while selecting it switched to the next one.
+- [x] Column menu (⋮, `Dropdown` rendered in a portal, name "Column menu"): Sort ascending / Sort descending / Remove sort (`menuitemradio`, current choice checked; added back 2026-10-19 so sorting can be reached with VO+arrows, which skip the header cell), Wider, Narrower (±50 px), Fit to content, hide column, show all columns. The earlier "Sort order: …" item was removed (2026-10-19) because its label showed the current state while selecting it switched to the next one; the new items name the action.
 - [x] Keyboard navigation: one tab stop (roving `tabindex`), arrows, Ctrl+arrows, Home/End, Ctrl+Home/End, PageUp/PageDown (20 rows); Enter/Space/Tab on the scroll area enters the grid.
 - [x] Copy: Ctrl/Cmd+C on a focused cell copies its text (HighTable feature; the earlier "not planned" note was wrong).
 - [x] Long values (> 100 characters) get a tooltip.
@@ -352,6 +352,10 @@ Findings:
   - Short windows (height ≤ 40rem, e.g. 400 % zoom): the table and views get the full window height, so the page scrolls first and the table then fills the window. Normal window: no outer scrollbar (checked).
   - Column choice stays as checkboxes (client asked for what works best for mouse and screen-reader users): native, recognised by both, read as "label1, checkbox, checked"; one Tab stop each is the expected behaviour. A toolbar of toggle buttons was considered (one Tab stop, arrows) but looks and reads less like "choose several".
   - Tab ending at the last cell and moving on to the browser is expected (the table is the last focusable element).
+- [x] Fixes after the third walkthrough (decided 2026-10-19):
+  - Sorting added to the column menu (Sort ascending / Sort descending / Remove sort), because VO+arrows land on the menu button and never on the header cell; plain arrows + Enter on the header still sort.
+  - The sort hint (`aria-describedby`) and the header tooltips (`title`, which screen readers also read as a description) were removed; how to sort is explained in the help dialog.
+  - Help text read with VO+arrows only: expected VoiceOver behaviour (Tab reaches controls, VO+arrows read text); left as is.
 - [x] Update `README.md` (pnpm commands, Solid, features, data, deployment).
 - ResizeObserver "loop completed with undelivered notifications" (seen once on 2026-10-16) was not reproduced on 2026-10-19 while switching lenses and resizing. Per [MDN](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors) it means a resize was deferred to the next frame; it is harmless unless it repeats. Likely source: the JSON preview feedback loop fixed above.
 
@@ -360,37 +364,35 @@ Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-
 1. **Start**: page title "DNS Tapir hyparquet" is read; VO+U (rotor) lists the heading "DNS Tapir", the landmarks main and search.
 
 2. **File selector**: Tab reaches "Choose file, pop-up button" (now below the dark header, above the search); changing file does not move focus; the table shows the new file.
-- Vid automatisk tabning läses "choose file". 
-- Vid automatisk tabning läses filnamnet två gånger
-- Hoppar över Choose file vid tab, går direkt till fil. 
-- Fil läses med filnamn först, därefter choose file mm.. se screenshot
 
 3. **Search form**: Tab order is search field → Search → Help → Domain/Columns → (label0–label9 in Columns mode) → Extended search. Each is read with its label.
--  Options changed finns nu med i searchbutton vilket inte känns logiskt. bör läsas av voiceover där det står med text istället (innan tabell)
+-  OK
 
 4. **Validation**: type `a`, Enter → "Enter at least 2 characters." is announced; the field is read as invalid.
-
+- OK
 
 5. **Columns**: choose Columns → the label0–label9 checkboxes appear in a group "Columns"; uncheck label1 → "Choose at least one column to search." is announced.
-- går ej att komma åt columnsalternativet med tab, ebart med cntrl + optiol + pilar / space
+- OK
 
 6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; "Options changed – press Search to update." appears below the options; on the Search button VoiceOver reads it.
-- se nr 3
+- OK
 
 7. **Result**: search `office` → "2 matching rows" (or similar) is announced without moving focus.
+OK
 
 8. **Help**: activate "Help" → a dialog "Help" opens with focus on Close; Tab stays inside the dialog; the text (incl. the Table section on sorting) can be read with VO+arrows; Esc or Close closes it and focus returns to the Help button.
-- fokus när man öppar hamnar på closebutton, går inte att komma åt texten alls. fokus bör hamna på rubrik
+- fokus på Help rubrik
+- för att få texten uppläst fungerar enbart ctrl+option+pil. inte bara pil eller bara tab. med tab hamnar fokus på close ( vilket är logiskt om pilarna hade fungerat)
 
-9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", with the hint "Select to sort"; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
-- "Select to sort" bör räcka här.
-- ändå rörigt, se screenshot
+9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", without an extra hint; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
+- ctrl +option + pil ger fokus på column menu, kommer inte åt sortering
+- pilr ger fokus på rubrik och sortering, kommer inte åt column menu
 
 
 10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible, also after moving with VO+arrows.
-- fokus hänger inte med fastnar efter label7
+- OK
 
-11. **Sorting**: Enter (or VO+Space) on a header sorts; VoiceOver announces "Sorted by label1, ascending"; Enter on "Row number" announces "Sorted by row number (file order)".
+11. **Sorting**: Enter (or VO+Space) on a header sorts; with VO+arrows use Column menu → Sort ascending / Sort descending / Remove sort (the current choice is read as checked); VoiceOver announces "Sorted by label1, ascending"; Enter on "Row number" announces "Sorted by row number (file order)".
 - OK
 
 12. **Column menu**: from a focused header, Tab to "Column menu", Enter opens it; arrows move between items; Esc closes it and returns focus.
@@ -403,11 +405,11 @@ Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-
 - OK
 
 15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows and the page scrolls (1.4.10) – note what does not.
-- funkar lite bättre nu, men vill kunna scrolla hela sidan - nu syns fortfarande en del av search ocg går inte att scrolla längre
+- OK
 
 16. **Focus visibility**: on every step above the focused element has a clearly visible outline.
 Note failures with step number, browser and what VoiceOver said.
-- fokusring följder inte med eftedr label7 med läser upp komande kolumner korrekt
+- OK
 
 
 ### Open decisions – after Phase 8

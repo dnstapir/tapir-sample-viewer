@@ -1,4 +1,4 @@
-import type { DataFrame, OrderBy } from 'hightable/dataframe'
+import type { DataFrame, Direction, OrderBy } from 'hightable/dataframe'
 import { stringify, toggleColumn } from 'hightable/dataframe'
 import type { JSX } from 'solid-js'
 import { For, Show, createEffect, createMemo, createSignal, createUniqueId, on, onCleanup, onMount, untrack } from 'solid-js'
@@ -27,7 +27,6 @@ interface Position {
 
 const rowsPerPage = 20
 const widthStep = 50
-const sortHint = 'Select to sort'
 
 function sortMessage(order: OrderBy): string {
   if (order.length === 0) return 'Sorted by row number (file order)'
@@ -59,7 +58,6 @@ export default function Table(props: TableProps): JSX.Element {
   const df = untrack(() => props.df)
   const storageKey = untrack(() => widthsStorageKey(props.name))
   const captionId = createUniqueId()
-  const hintId = createUniqueId()
   const numRows = () => df.numRows
 
   // data version: bumped whenever the data frame resolves cells, so cell reads re-run
@@ -308,6 +306,12 @@ export default function Table(props: TableProps): JSX.Element {
     sortBy(toggleColumn(column, orderBy()))
   }
 
+  /** Makes the column the first sort key in the given direction, or removes it from the sort. */
+  function setColumnSort(column: string, direction: Direction | undefined) {
+    const others = orderBy().filter(item => item.column !== column)
+    sortBy(direction ? [{ column, direction }, ...others] : others)
+  }
+
   function hideColumn(column: string) {
     setHidden(current => new Set([...current, column]))
     // the focused header may disappear; restart from the first cell
@@ -344,8 +348,6 @@ export default function Table(props: TableProps): JSX.Element {
                 role="columnheader"
                 aria-colindex={1}
                 aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
-                aria-describedby={hintId}
-                title={orderBy().length === 0 ? 'Sorted by row number (file order)' : 'Press to reset sorting to row number (file order)'}
                 tabIndex={tabIndexFor(1, 1)}
                 onMouseDown={() => setPosition({ row: 1, col: 1 })}
                 onClick={() => { sortBy([]) }}
@@ -368,12 +370,12 @@ export default function Table(props: TableProps): JSX.Element {
                   width={width(column)}
                   fixedWidth={fixed()[column] !== undefined}
                   tabIndex={tabIndexFor(1, index() + 2)}
-                  hintId={hintId}
                   canHide={columns().length > 1}
                   canShowAll={hidden().size > 0}
                   ref={el => { headerCells.set(column, el) }}
                   onFocusCell={() => setPosition({ row: 1, col: index() + 2 })}
                   onToggleSort={() => { toggleSort(column) }}
+                  onSort={direction => { setColumnSort(column, direction) }}
                   onHide={() => { hideColumn(column) }}
                   onShowAll={() => setHidden(new Set<string>())}
                   onResize={value => { resizeTo(column, value) }}
@@ -433,7 +435,6 @@ export default function Table(props: TableProps): JSX.Element {
         </table>
       </div>
     </div>
-    <span id={hintId} class="visually-hidden">{sortHint}</span>
     <p class="visually-hidden" role="status">{sortStatus()}</p>
   </div>
 }
@@ -449,12 +450,12 @@ interface ColumnHeaderProps {
   width?: number
   fixedWidth: boolean
   tabIndex: number
-  hintId: string
   canHide: boolean
   canShowAll: boolean
   ref: (element: HTMLTableCellElement) => void
   onFocusCell: () => void
   onToggleSort: () => void
+  onSort: (direction: Direction | undefined) => void
   onHide: () => void
   onShowAll: () => void
   onResize: (width: number) => void
@@ -467,12 +468,11 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
   const direction = () => orderIndex() >= 0 ? props.orderBy[orderIndex()].direction : undefined
   const ariaSort = () => orderIndex() === 0 ? direction() : 'none'
   const indicator = () => direction() === 'ascending' ? '\u2b61' : direction() === 'descending' ? '\u2b63' : '\u21c5'
-  const description = () => {
-    if (orderIndex() > 0 || direction() === undefined) return `Press to sort by ${props.column} in ascending order`
-    if (direction() === 'ascending') return `Press to sort by ${props.column} in descending order`
-    return `Press to stop sorting by ${props.column}`
-  }
+  // sorting is also here so it can be reached with the VoiceOver cursor, which skips the header cell itself
   const menuItems = () => [
+    { label: 'Sort ascending', checked: direction() === 'ascending', onSelect: () => { props.onSort('ascending') } },
+    { label: 'Sort descending', checked: direction() === 'descending', onSelect: () => { props.onSort('descending') } },
+    { label: 'Remove sort', checked: direction() === undefined, onSelect: () => { props.onSort(undefined) } },
     { label: 'Wider', onSelect: () => { props.onResizeBy(widthStep) } },
     { label: 'Narrower', onSelect: () => { props.onResizeBy(-widthStep) } },
     { label: 'Fit to content', onSelect: () => { props.onAutoResize() } },
@@ -487,8 +487,6 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     aria-colindex={props.colIndex}
     aria-sort={ariaSort()}
     aria-label={props.column}
-    aria-describedby={props.hintId}
-    title={description()}
     tabIndex={props.tabIndex}
     style={widthStyle(props.width)}
     data-order-index={orderIndex() >= 0 ? orderIndex() : undefined}
