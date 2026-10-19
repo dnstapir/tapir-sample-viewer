@@ -7,11 +7,7 @@ interface ResizerProps {
   autoResize: () => void
 }
 
-/**
- * Column resize handle for the pointer: drag to resize, double-click to fit to content.
- * Hidden from assistive technology and not focusable: the column menu offers the same
- * (Wider, Narrower, Fit to content) for keyboard, screen-reader and single-pointer use (WCAG 2.5.7).
- */
+// pointer only; keyboard and screen-reader users resize from the column menu
 export default function ColumnResizer(props: ResizerProps): JSX.Element {
   const [drag, setDrag] = createSignal<{ pointerId: number, startX: number, startWidth: number }>()
 

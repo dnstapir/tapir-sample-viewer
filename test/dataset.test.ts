@@ -10,9 +10,6 @@ interface FakeServer {
   requests: { method: string, range: string | null }[]
 }
 
-/**
- * Serves files from disk like a static host. `ranges: false` mimics a server without range support.
- */
 function fakeServer({ ranges }: { ranges: boolean }): FakeServer {
   const requests: FakeServer['requests'] = []
   async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -67,7 +64,6 @@ describe('dataset', () => {
     expect(server.requests[0]).toEqual({ method: 'GET', range: 'bytes=0-0' })
     expect(server.requests.some(request => request.method === 'HEAD')).toBe(false)
     if (!ranges) {
-      // whole file came with the size probe; nothing else is downloaded
       expect(server.requests).toHaveLength(1)
     }
   })

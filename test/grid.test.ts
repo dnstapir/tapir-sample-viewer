@@ -78,7 +78,6 @@ describe('columnCell', () => {
   it('scales the bar to the largest chunk of the column', () => {
     const rg = rowGroup([chunk('a', 100n)])
     expect(columnCell(1, rg, 0, 200)).toEqual({
-      name: 'a',
       title: 'Row Group: 1\n10 rows\nColumn: a\n100 bytes\n10.00 bytes/cell',
       bytes: 100,
       widthPercent: 50,

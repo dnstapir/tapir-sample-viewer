@@ -1,7 +1,5 @@
-// Generates a large parquet file for local testing (PLAN.md Phase 8).
+// Writes a large test file from the sample rows (gitignored, never deployed).
 // Usage: pnpm generate:large [rows]   (default 200000 rows, row groups of 50000)
-// Rows repeat the bundled samples, with start_time stepping one minute per 1000 rows.
-// The output is gitignored and never deployed.
 import { readFileSync, readdirSync } from 'node:fs'
 import { parquetMetadata, parquetReadObjects } from 'hyparquet'
 import { compressors } from 'hyparquet-compressors'

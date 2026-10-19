@@ -17,7 +17,6 @@
   padding: 0 4px;
 }
 
-/* caret */
 .dropdown-caret {
   display: inline-block;
   font-size: 10px;
@@ -35,18 +34,13 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  left: 0;
   max-height: 170px;
   max-width: 300px;
   min-width: 160px;
   overflow-y: auto;
   position: absolute;
   z-index: 20;
-}
-.dropdown-left .dropdown-menu {
-  left: 0;
-}
-.dropdown-right .dropdown-menu {
-  right: 0;
 }
 
 .dropdown-menu button {

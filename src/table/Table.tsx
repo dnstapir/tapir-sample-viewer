@@ -12,14 +12,11 @@ import './Table.css'
 
 interface TableProps {
   df: DataFrame
-  /** data set name: key for persisted column widths */
   name: string
-  /** accessible name of the grid, e.g. "Table" */
   label: string
   onError: (error: unknown) => void
 }
 
-/** Focused cell in ARIA coordinates: row 1 is the header, column 1 the row numbers. */
 interface Position {
   row: number
   col: number
@@ -37,7 +34,6 @@ function widthStyle(width: number | undefined): JSX.CSSProperties | undefined {
   return width === undefined ? undefined : { 'min-width': `${width}px`, 'max-width': `${width}px` }
 }
 
-/** Long values get a tooltip, truncated to 400 characters (as in HighTable). */
 function cellTitle(text: string | undefined): string | undefined {
   if (text === undefined || text.length <= 100) return undefined
   return text.length > 400 ? `${text.slice(0, 397)}\u2026` : text
@@ -49,18 +45,12 @@ function copyOnEvent(event: ClipboardEvent, text: string | undefined) {
   navigator.clipboard.writeText(text).catch(() => undefined)
 }
 
-/**
- * Virtualized, sortable data grid over a hightable `DataFrame` (Solid port of HighTable's features).
- * Follows the WAI-ARIA APG grid pattern: one tab stop, arrow-key navigation, `aria-rowcount`/`aria-rowindex`.
- * Expects to be recreated when the data frame changes.
- */
 export default function Table(props: TableProps): JSX.Element {
   const df = untrack(() => props.df)
   const storageKey = untrack(() => widthsStorageKey(props.name))
   const captionId = createUniqueId()
   const numRows = () => df.numRows
 
-  // data version: bumped whenever the data frame resolves cells, so cell reads re-run
   const [version, setVersion] = createSignal(0)
   onMount(() => {
     function bump() { setVersion(v => v + 1) }
@@ -74,7 +64,6 @@ export default function Table(props: TableProps): JSX.Element {
   const allColumns = df.columnDescriptors.map(c => c.name)
   const columns = createMemo(() => allColumns.filter(name => !hidden().has(name)))
 
-  // viewport
   let scroller: HTMLDivElement | undefined
   let headerRow: HTMLTableRowElement | undefined
   const [scrollTop, setScrollTop] = createSignal(0)
@@ -118,7 +107,6 @@ export default function Table(props: TableProps): JSX.Element {
     }
   })
 
-  // fetch the rendered rows (visible + overscan); a newer request aborts the previous one
   createEffect(() => {
     const { start, end } = range()
     const fetchColumns = columns()
@@ -142,7 +130,6 @@ export default function Table(props: TableProps): JSX.Element {
     return df.getRowNumber({ row, orderBy: orderBy() })?.value
   }
 
-  // column widths: user-set (persisted) > adjusted to fit > measured from content
   const [fixed, setFixed] = createSignal<Widths>(loadWidths(localStorage, storageKey))
   const [measured, setMeasured] = createSignal<Widths>({})
   createEffect(on(fixed, value => { saveWidths(localStorage, storageKey, value) }, { defer: true }))
@@ -157,7 +144,7 @@ export default function Table(props: TableProps): JSX.Element {
   }
   const headerCells = new Map<string, HTMLTableCellElement>()
 
-  // measure a column once some of its cells have data, so widths stop jumping while scrolling
+  // measured once a column has data, so widths do not jump while scrolling
   createEffect(() => {
     const visibleRows = rows()
     const updates: Widths = {}
@@ -179,11 +166,6 @@ export default function Table(props: TableProps): JSX.Element {
     setMeasured(current => withoutKey(current, column))
   }
 
-  function resizeBy(column: string, delta: number) {
-    resizeTo(column, (width(column) ?? headerCells.get(column)?.offsetWidth ?? minColumnWidth) + delta)
-  }
-
-  // keyboard navigation (roving tabindex)
   const [position, setPosition] = createSignal<Position>({ row: 1, col: 1 })
   const rowCount = () => numRows() + 1
   const colCount = () => columns().length + 1
@@ -192,15 +174,10 @@ export default function Table(props: TableProps): JSX.Element {
     return scroller?.querySelector<HTMLElement>(`tr[aria-rowindex="${row}"] > [aria-colindex="${col}"]`) ?? null
   }
 
-  /**
-   * Scrolls the table so the cell is not hidden behind the sticky header row or row numbers.
-   * Done by hand: scrollIntoView on sticky cells is not reliable when focus comes from VoiceOver.
-   */
   function reveal(cell: HTMLElement) {
     if (!scroller) return
     const view = scroller.getBoundingClientRect()
     const rect = cell.getBoundingClientRect()
-    // sticky cells never need scrolling along their sticky axis
     if (cell.getAttribute('aria-colindex') !== '1') {
       const left = view.left + header().cornerWidth
       const right = view.left + scroller.clientWidth
@@ -247,14 +224,11 @@ export default function Table(props: TableProps): JSX.Element {
     return current.row === row && current.col === col ? 0 : -1
   }
 
-  // the scroll area is a tab stop only while the focusable cell is scrolled out of the DOM
   const activeCellRendered = () => {
     const { row } = position()
     return row === 1 || row - 2 >= range().start && row - 2 < range().end
   }
 
-  // focus can also arrive from a screen reader (also on a menu button inside a header) or a click;
-  // keep the roving position in sync and the cell in view
   function onGridFocusIn(event: FocusEvent) {
     const cell = (event.target as HTMLElement).closest<HTMLElement>('th[aria-colindex], td[aria-colindex]')
     const row = Number(cell?.parentElement?.getAttribute('aria-rowindex'))
@@ -280,7 +254,6 @@ export default function Table(props: TableProps): JSX.Element {
       PageUp: { row: row - rowsPerPage, col },
     }
     const target = moves[event.key]
-    // Space is captured to keep the page from scrolling while navigating
     if (!target && event.key !== ' ') return
     event.preventDefault()
     event.stopPropagation()
@@ -295,7 +268,6 @@ export default function Table(props: TableProps): JSX.Element {
     }
   }
 
-  // sorting and column visibility; screen readers do not reliably announce aria-sort changes
   const [sortStatus, setSortStatus] = createSignal('')
   function sortBy(order: OrderBy) {
     setOrderBy(order)
@@ -306,7 +278,6 @@ export default function Table(props: TableProps): JSX.Element {
     sortBy(toggleColumn(column, orderBy()))
   }
 
-  /** Makes the column the first sort key in the given direction, or removes it from the sort. */
   function setColumnSort(column: string, direction: Direction | undefined) {
     const others = orderBy().filter(item => item.column !== column)
     sortBy(direction ? [{ column, direction }, ...others] : others)
@@ -314,7 +285,6 @@ export default function Table(props: TableProps): JSX.Element {
 
   function hideColumn(column: string) {
     setHidden(current => new Set([...current, column]))
-    // the focused header may disappear; restart from the first cell
     goTo({ row: 1, col: 1 })
   }
 
@@ -379,7 +349,6 @@ export default function Table(props: TableProps): JSX.Element {
                   onHide={() => { hideColumn(column) }}
                   onShowAll={() => setHidden(new Set<string>())}
                   onResize={value => { resizeTo(column, value) }}
-                  onResizeBy={delta => { resizeBy(column, delta) }}
                   onAutoResize={() => { autoResize(column) }}
                 />}
               </For>
@@ -459,29 +428,33 @@ interface ColumnHeaderProps {
   onHide: () => void
   onShowAll: () => void
   onResize: (width: number) => void
-  onResizeBy: (delta: number) => void
   onAutoResize: () => void
 }
 
 function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
+  let cell: HTMLTableCellElement | undefined
   const orderIndex = () => props.orderBy.findIndex(item => item.column === props.column)
   const direction = () => orderIndex() >= 0 ? props.orderBy[orderIndex()].direction : undefined
   const ariaSort = () => orderIndex() === 0 ? direction() : 'none'
   const indicator = () => direction() === 'ascending' ? '\u2b61' : direction() === 'descending' ? '\u2b63' : '\u21c5'
-  // sorting is also here so it can be reached with the VoiceOver cursor, which skips the header cell itself
+  const resizeBy = (delta: number) => { props.onResize((props.width ?? cell?.offsetWidth ?? 0) + delta) }
+  // sorting is also here because the VoiceOver cursor skips the header cell
   const menuItems = () => [
     { label: 'Sort ascending', checked: direction() === 'ascending', onSelect: () => { props.onSort('ascending') } },
     { label: 'Sort descending', checked: direction() === 'descending', onSelect: () => { props.onSort('descending') } },
     { label: 'Remove sort', checked: direction() === undefined, onSelect: () => { props.onSort(undefined) } },
-    { label: 'Wider', onSelect: () => { props.onResizeBy(widthStep) } },
-    { label: 'Narrower', onSelect: () => { props.onResizeBy(-widthStep) } },
+    { label: 'Wider', onSelect: () => { resizeBy(widthStep) } },
+    { label: 'Narrower', onSelect: () => { resizeBy(-widthStep) } },
     { label: 'Fit to content', onSelect: () => { props.onAutoResize() } },
     ...props.canHide ? [{ label: 'Hide column', onSelect: () => { props.onHide() } }] : [],
     ...props.canShowAll ? [{ label: 'Show all columns', onSelect: () => { props.onShowAll() } }] : [],
   ]
 
   return <th
-    ref={el => { props.ref(el) }}
+    ref={el => {
+      cell = el
+      props.ref(el)
+    }}
     scope="col"
     role="columnheader"
     aria-colindex={props.colIndex}
@@ -503,7 +476,7 @@ function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
     }}
     onCopy={event => { copyOnEvent(event, props.column) }}
   >
-    {/* the name comes from aria-label; hidden here so it is not read twice */}
+    {/* named by aria-label; hidden so it is not read twice */}
     <span class="column-name" aria-hidden="true">{props.column}</span>
     <span class="sort-indicator" aria-hidden="true">{indicator()}</span>
     <Dropdown

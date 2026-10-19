@@ -2,14 +2,14 @@
 import { cleanup, fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { messages } from '../src/lib/search.ts'
-import type { SubmittedSearch } from '../src/search/SearchBar.tsx'
+import type { SubmittedSearch } from '../src/lib/search.ts'
 import SearchBar from '../src/search/SearchBar.tsx'
 
 describe('SearchBar', () => {
   afterEach(cleanup)
 
   function setup(status = '') {
-    const onSubmit = vi.fn<(search: SubmittedSearch) => void>()
+    const onSubmit = vi.fn<(search: SubmittedSearch | undefined) => void>()
     render(() => <SearchBar onSubmit={onSubmit} status={status} />)
     const form = screen.getByRole('search', { name: 'Search' })
     const input = screen.getByRole('searchbox', { name: 'Search' })
@@ -26,14 +26,14 @@ describe('SearchBar', () => {
     search('svt.se')
     expect(onSubmit).toHaveBeenCalledTimes(1)
     const [submitted] = onSubmit.mock.calls[0]
-    expect(submitted.extended).toBe(false)
-    expect(submitted.predicate?.columns).toEqual(['label0', 'label1'])
+    expect(submitted?.extended).toBe(false)
+    expect(submitted?.predicate.columns).toEqual(['label0', 'label1'])
   })
 
   it('submits no predicate for an empty query, to show the file unfiltered', () => {
     const { onSubmit, search } = setup()
     search('  ')
-    expect(onSubmit).toHaveBeenCalledWith({ predicate: undefined, extended: false })
+    expect(onSubmit).toHaveBeenCalledWith(undefined)
   })
 
   it('shows a linked validation message for a too short query and does not submit', () => {
@@ -64,7 +64,6 @@ describe('SearchBar', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Extended search (all files)' }))
     expect(onSubmit).not.toHaveBeenCalled()
     expect(screen.getByText('Options changed – press Search to update.')).toBeTruthy()
-    // read where it stands, not as a description of the Search button
     expect(button.hasAttribute('aria-describedby')).toBe(false)
 
     search('svt')
@@ -99,7 +98,7 @@ describe('SearchBar', () => {
     fireEvent.click(within(group).getByRole('checkbox', { name: 'label0' }))
     expect(note?.textContent).toBe('')
     search('svt')
-    expect(onSubmit.mock.calls[0][0].predicate?.columns).toEqual(['label0', 'label2'])
+    expect(onSubmit.mock.calls[0][0]?.predicate.columns).toEqual(['label0', 'label2'])
   })
 
   it('announces the status politely', () => {
@@ -120,7 +119,6 @@ describe('SearchBar', () => {
     fireEvent.click(help)
     expect(showModal).toHaveBeenCalledTimes(1)
     const dialog = screen.getByRole('dialog', { name: 'Help' })
-    // reading starts at the heading, not at the Close button
     expect(document.activeElement).toBe(within(dialog).getByRole('heading', { name: 'Help' }))
     expect(dialog.textContent).toContain('www.svt.se')
     expect(dialog.textContent).toContain('Click or select a column header to sort. Click/select Row number header to restore file order.')

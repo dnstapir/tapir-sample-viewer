@@ -5,13 +5,8 @@ import Page from './Page.tsx'
 import { isAbortError } from './lib/abort.ts'
 import type { DataSet } from './lib/dataset.ts'
 import { createDataSetLoader, listDataSets } from './lib/dataset.ts'
-import type { SearchPredicate } from './lib/search.ts'
+import type { SubmittedSearch } from './lib/search.ts'
 import { searchAll, searchDataSet } from './lib/searchScan.ts'
-
-interface AppliedSearch {
-  predicate: SearchPredicate
-  extended: boolean
-}
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
@@ -24,12 +19,11 @@ export default function App(): JSX.Element {
   const [dataSet] = createResource(() => entries[selectedIndex()], load)
   const [error, setError] = createSignal<Error>()
 
-  // the last submitted search; undefined shows the selected file unfiltered
-  const [search, setSearch] = createSignal<AppliedSearch>()
+  const [search, setSearch] = createSignal<SubmittedSearch>()
   const [progress, setProgress] = createSignal<{ file: number, files: number }>()
   let running: AbortController | undefined
   const [result] = createResource(
-    (): { search: AppliedSearch, dataSet?: DataSet } | false => {
+    (): { search: SubmittedSearch, dataSet?: DataSet } | false => {
       const current = search()
       if (!current) return false
       if (current.extended) return { search: current }
@@ -44,7 +38,7 @@ export default function App(): JSX.Element {
     },
   )
 
-  function applySearch(next: AppliedSearch | undefined) {
+  function applySearch(next: SubmittedSearch | undefined) {
     running?.abort()
     setSearch(next)
   }
@@ -74,19 +68,16 @@ export default function App(): JSX.Element {
       entries={entries}
       selectedIndex={selectedIndex()}
       onSelect={index => {
-        // a new file clears the search result (PLAN.md 4.2)
         applySearch(undefined)
         setSelectedIndex(index)
       }}
-      // reading a resource in the error state throws, so only read it when ready
+      // reading a resource in the error state throws
       dataSet={dataSet.state === 'ready' ? dataSet() : undefined}
       loading={dataSet.loading}
-      onSearch={submitted => {
-        applySearch(submitted.predicate ? { predicate: submitted.predicate, extended: submitted.extended } : undefined)
-      }}
+      onSearch={applySearch}
       searchStatus={status()}
       searching={result.loading}
-      // a cleared search keeps the resource's last value, so check search() too
+      // a cleared search keeps the resource's last value
       searchResult={search() && result.state === 'ready' ? result() : undefined}
       extended={search()?.extended ?? false}
       onError={error => setError(toError(error))}

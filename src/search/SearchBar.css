@@ -8,7 +8,6 @@
   margin: 0 5px 5px;
   padding: 10px 20px;
 }
-/* empty live regions stay rendered (so they announce) but take no space */
 .search-bar > * + *:not(:empty) {
   margin-top: 6px;
 }
@@ -65,7 +64,6 @@
   color: #333;
 }
 
-/* help */
 .search-help-button,
 .search-help-button:active,
 .search-help-button:hover {

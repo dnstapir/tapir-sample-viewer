@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { SearchOptions, SearchPredicate } from '../src/lib/search.ts'
 import { defaultSearchOptions, messages, parseSearch, sameOptions } from '../src/lib/search.ts'
 
-/** Row with label0 = TLD, label1 = name, … from a domain name. */
 function domain(name: string): Record<string, unknown> {
   const labels = name.split('.').reverse()
   return Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`label${i}`, labels[i] ?? null]))

@@ -3,15 +3,11 @@ import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRow
 
 export const fileColumn = 'File'
 
-export interface ConcatPart {
+interface ConcatPart {
   name: string
   df: DataFrame
 }
 
-/**
- * Unsorted stack of data frames with the same columns, with a leading File column holding each part's name.
- * Row numbers are the row numbers within each part's file.
- */
 export function concatDataFrame(parts: ConcatPart[]): DataFrame {
   const starts: number[] = []
   let numRows = 0
@@ -28,7 +24,6 @@ export function concatDataFrame(parts: ConcatPart[]): DataFrame {
     return { part: parts[index], row: row - starts[index] }
   }
 
-  // listeners go to every part, so events from any file reach the table
   const eventTarget: CustomEventTarget<DataFrameEvents> = {
     addEventListener(type, listener, options) {
       for (const part of parts) part.df.eventTarget?.addEventListener(type, listener, options)

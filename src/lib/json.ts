@@ -1,9 +1,5 @@
-/* Helpers for the Json viewer, ported from hyperparam's Json component (MIT). */
+/* Ported from hyperparam's Json component (MIT). */
 
-/**
- * Leaf values that can be shown inline in a collapsed preview.
- * Strings are deliberately excluded (same as the original).
- */
 export function isPrimitive(value: unknown): boolean {
   return value === undefined ||
     value === null ||
@@ -19,18 +15,11 @@ export function stringifyPrimitive(value: unknown): string {
   return JSON.stringify(value)
 }
 
-/**
- * Collapse by default when every value is primitive or there are 100+ entries.
- */
 export function shouldObjectCollapse(obj: object): boolean {
   const values = Object.values(obj)
   return values.every(isPrimitive) || values.length >= 100
 }
 
-/**
- * Number of leading entries that fit in a one-line preview of `maxCharacters`.
- * `truncated` is true when an entry was left out (too long or not primitive).
- */
 export function previewCount(entries: [string | undefined, unknown][], maxCharacters: number): { count: number, truncated: boolean } {
   const separator = ', '
   const keySeparator = ': '

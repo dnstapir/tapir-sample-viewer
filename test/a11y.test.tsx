@@ -9,7 +9,7 @@ import type { DataSet } from '../src/lib/dataset.ts'
 import { parquetDataFrame } from '../src/lib/parquetDataFrame.ts'
 import { loadSamples, openFile } from './samples.ts'
 
-/** axe-core WCAG 2.x A/AA rules; colour contrast needs a real layout engine and is checked in the browser. */
+// colour contrast needs a real layout engine; it is checked in the browser
 async function violations(): Promise<string[]> {
   const results = await axe.run(document.body, {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
@@ -25,7 +25,6 @@ describe('accessibility (axe-core)', () => {
     const file = await openFile(sample.path)
     const rows = parquetDataFrame(file, sample.metadata)
     dataSet = { name: sample.name, url: sample.path, byteLength: sample.byteLength, metadata: sample.metadata, file, rows, df: sortableDataFrame(rows) }
-    Element.prototype.scrollIntoView = vi.fn()
   })
   afterEach(cleanup)
 

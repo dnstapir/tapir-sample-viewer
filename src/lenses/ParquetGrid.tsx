@@ -12,10 +12,6 @@ function pagesText(stats: { totalPages: number, dataPages: number, dictPages: nu
   return `${stats.totalPages.toLocaleString()} (${stats.dataPages} data, ${stats.dictPages} dictionary)`
 }
 
-/**
- * Row groups × column chunks with widths proportional to compressed size.
- * The bars are hidden from assistive technology; the same numbers are offered as a table below.
- */
 export default function ParquetGrid(props: { metadata: FileMetaData }): JSX.Element {
   const captionId = createUniqueId()
   const columns = createMemo(() => gridColumns(props.metadata))

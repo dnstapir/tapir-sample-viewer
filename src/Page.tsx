@@ -7,7 +7,7 @@ import ParquetMetadata from './lenses/ParquetMetadata.tsx'
 import type { DataSet, DataSetEntry } from './lib/dataset.ts'
 import { formatFileSize } from './lib/format.ts'
 import type { SearchResult } from './lib/searchScan.ts'
-import type { SubmittedSearch } from './search/SearchBar.tsx'
+import type { SubmittedSearch } from './lib/search.ts'
 import SearchBar from './search/SearchBar.tsx'
 import Table from './table/Table.tsx'
 
@@ -22,21 +22,16 @@ interface PageProps {
   onSelect: (index: number) => void
   dataSet?: DataSet
   loading: boolean
-  onSearch: (search: SubmittedSearch) => void
+  onSearch: (search: SubmittedSearch | undefined) => void
   searchStatus: string
   searching: boolean
   searchResult?: SearchResult
-  /** an Extended search is applied: results come from all files */
   extended: boolean
   onError: (error: unknown) => void
 }
 
-/**
- * Header with file picker, search, file summary, lens picker and the selected lens.
- */
 export default function Page(props: PageProps): JSX.Element {
   const [lens, setLens] = createSignal<Lens>('table')
-  // the file selector follows the checkbox, not the submitted search (decided 2026-10-19)
   const [extendedChecked, setExtendedChecked] = createSignal(false)
   const fileSelectId = createUniqueId()
   const lensItems = () => lenses.map(name => ({
@@ -59,7 +54,7 @@ export default function Page(props: PageProps): JSX.Element {
     <header class="top-header">
       <h1>
         <img class="tapir-logo" src="TAPIR-positiv.svg" alt="" />
-        DNS Tapir
+        DNS Tapir Parquet Parser
       </h1>
     </header>
     <div class="file-chooser">
@@ -93,9 +88,7 @@ export default function Page(props: PageProps): JSX.Element {
         </div>
         <Switch>
           <Match when={lens() === 'table'}>
-            {/* the search status region announces progress; this only replaces the table visually */}
             <Show when={!props.searching} fallback={<p class="placeholder">Searching…</p>}>
-              {/* keyed: a new data set or result gets a fresh table (scroll, sort, focus) */}
               <Show when={props.searchResult ?? dataSet()} keyed>
                 {current => <Table
                   df={current.df}

@@ -1,16 +1,13 @@
 import type { ColumnChunk, FileMetaData, RowGroup } from 'hyparquet'
 
-export interface GridColumns {
+interface GridColumns {
   names: string[]
-  /** compressed bytes per column, summed over all row groups */
   totals: number[]
-  /** largest compressed column chunk per column */
   maxes: number[]
-  /** CSS `grid-template-columns` with widths proportional to `totals` */
   template: string
 }
 
-export interface RowGroupStats {
+interface RowGroupStats {
   numRows: number
   compressed: number
   uncompressed: number
@@ -19,12 +16,9 @@ export interface RowGroupStats {
   dictPages: number
 }
 
-export interface ColumnCell {
-  name: string
+interface ColumnCell {
   title: string
-  /** compressed bytes of the column chunk */
   bytes: number
-  /** bar width relative to the largest chunk of the same column */
   widthPercent: number
 }
 
@@ -32,9 +26,6 @@ function columnName(column: ColumnChunk, index: number): string {
   return column.meta_data?.path_in_schema.join('.') ?? `col${index}`
 }
 
-/**
- * Column names (from the first row group) and per-column size totals.
- */
 export function gridColumns(metadata: FileMetaData): GridColumns {
   const firstColumns = metadata.row_groups[0]?.columns ?? []
   const totals = Array<number>(firstColumns.length).fill(0)
@@ -101,7 +92,6 @@ export function columnCell(rowGroupIndex: number, rowGroup: RowGroup, columnInde
   title += `\n${size.toLocaleString()} bytes`
   title += `\n${(size / numRows).toFixed(2)} bytes/cell`
   return {
-    name,
     title,
     bytes: size,
     widthPercent: columnMax > 0 ? size / columnMax * 100 : 0,

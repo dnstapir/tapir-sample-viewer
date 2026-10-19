@@ -1,28 +1,17 @@
 import type { JSX } from 'solid-js'
 import { For, Show, createSignal, createUniqueId } from 'solid-js'
-import type { SearchMode, SearchOptions, SearchPredicate } from '../lib/search.ts'
+import type { SearchMode, SearchOptions, SubmittedSearch } from '../lib/search.ts'
 import { defaultSearchOptions, labelColumns, messages, parseSearch, sameOptions } from '../lib/search.ts'
 import SearchHelp from './SearchHelp.tsx'
 import './SearchBar.css'
 
-export interface SubmittedSearch {
-  /** undefined: show the selected file unfiltered */
-  predicate?: SearchPredicate
-  extended: boolean
-}
-
 interface SearchBarProps {
-  onSubmit: (search: SubmittedSearch) => void
-  /** the Extended search checkbox changed (applies to the file selector at once) */
+  // undefined: show the selected file unfiltered
+  onSubmit: (search: SubmittedSearch | undefined) => void
   onExtendedChange?: (extended: boolean) => void
-  /** result or progress, announced politely */
   status: string
 }
 
-/**
- * Search form (PLAN.md 4.2): runs on Enter or the Search button only;
- * changed options take effect on the next submit.
- */
 export default function SearchBar(props: SearchBarProps): JSX.Element {
   const id = createUniqueId()
   const [query, setQuery] = createSignal('')
@@ -37,7 +26,6 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
   const noColumns = () => mode() === 'columns' && columns().length === 0
 
   function toggleColumn(column: string, checked: boolean) {
-    // keep label order, whatever the click order
     setColumns(current => labelColumns.filter(name => name === column ? checked : current.includes(name)))
   }
 
@@ -46,13 +34,12 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
     const current = options()
     const parsed = parseSearch(query(), current)
     if (parsed.kind === 'invalid') {
-      // the column message is already shown while no column is checked
       setQueryError(parsed.field === 'query' ? parsed.message : undefined)
       return
     }
     setQueryError(undefined)
     setSubmitted(current)
-    props.onSubmit({ predicate: parsed.kind === 'search' ? parsed.predicate : undefined, extended: current.extended })
+    props.onSubmit(parsed.kind === 'search' ? { predicate: parsed.predicate, extended: current.extended } : undefined)
   }
 
   return <form class="search-bar" role="search" aria-label="Search" onSubmit={submit} noValidate>
@@ -61,7 +48,7 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
       <input
         id={`${id}-query`}
         type="search"
-        autocomplete="off"
+        placeholder="Enter at least two characters to search"
         spellcheck={false}
         value={query()}
         onInput={event => setQuery(event.currentTarget.value)}
@@ -85,7 +72,6 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
       </label>
     </fieldset>
 
-    {/* directly after the Columns radio, so the next Tab reaches the checkboxes */}
     <Show when={mode() === 'columns'}>
       <fieldset class="search-group" aria-describedby={`${id}-columns-note`}>
         <legend>Columns</legend>
@@ -101,7 +87,6 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
         </For>
       </fieldset>
     </Show>
-    {/* rendered while hidden too, so the message is announced when it appears */}
     <p id={`${id}-columns-note`} class="search-error" role="status">{noColumns() ? messages.noColumns : ''}</p>
 
     <label class="search-extended">
@@ -116,7 +101,6 @@ export default function SearchBar(props: SearchBarProps): JSX.Element {
       Extended search (all files)
     </label>
 
-    {/* read where it stands, before the table; not tied to the Search button (client decision 2026-10-19) */}
     <Show when={optionsChanged()}>
       <p class="search-note">Options changed – press Search to update.</p>
     </Show>

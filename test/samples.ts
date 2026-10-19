@@ -10,13 +10,9 @@ export interface Sample {
   metadata: FileMetaData
 }
 
-// glob keys only; the parquet modules are never imported. Generated large files are not samples.
 const samplePaths = Object.keys(import.meta.glob(['../src/parquets/*.parquet', '!../src/parquets/large-*.parquet']))
 
-/**
- * Reads a file from disk. Bytes are copied into this realm's ArrayBuffer:
- * under jsdom, hyparquet's `instanceof ArrayBuffer` rejects Node's buffers.
- */
+// copied into this realm's ArrayBuffer: under jsdom, hyparquet's `instanceof ArrayBuffer` rejects Node's buffers
 export async function openFile(path: string): Promise<AsyncBuffer> {
   const file = await asyncBufferFromFile(path)
   return {
@@ -25,10 +21,6 @@ export async function openFile(path: string): Promise<AsyncBuffer> {
   }
 }
 
-/**
- * Metadata of every bundled sample parquet file, read from disk.
- * Throws if none are found, so sample-based tests cannot pass vacuously.
- */
 export function loadSamples(): Promise<Sample[]> {
   if (samplePaths.length === 0) {
     return Promise.reject(new Error('no sample parquet files found in src/parquets/'))

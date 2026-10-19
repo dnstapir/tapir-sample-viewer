@@ -1,7 +1,6 @@
 import type { DataFrame } from 'hightable/dataframe'
 import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRowNumberParams } from 'hightable/dataframe'
 
-/** Splits ascending row indexes into runs of consecutive rows. */
 export function consecutiveRanges(rows: readonly number[]): { rowStart: number, rowEnd: number }[] {
   const ranges: { rowStart: number, rowEnd: number }[] = []
   for (const row of rows) {
@@ -12,16 +11,11 @@ export function consecutiveRanges(rows: readonly number[]): { rowStart: number, 
   return ranges
 }
 
-/**
- * Unsorted view on the given source rows (ascending), e.g. search matches.
- * Row `i` is source row `indexes[i]`; row numbers and cells come from the source, which stays lazily loaded.
- */
+// row `i` is source row `indexes[i]` (ascending)
 export function filteredDataFrame(source: DataFrame, indexes: readonly number[]): DataFrame {
   const data = { numRows: indexes.length, columnDescriptors: source.columnDescriptors }
   return {
     ...data,
-    metadata: source.metadata,
-    // events report new source cells, which are also new cells of this view
     eventTarget: source.eventTarget,
     getRowNumber({ row, orderBy }) {
       validateGetRowNumberParams({ row, orderBy, data })

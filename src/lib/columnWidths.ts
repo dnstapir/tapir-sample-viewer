@@ -1,18 +1,14 @@
-/* Column width rules ported from HighTable's ColumnWidthsProvider (MIT), keyed by column name instead of index. */
+/* Column width rules ported from HighTable's ColumnWidthsProvider (MIT). */
 
-/** Widths in px, keyed by column name. */
 export type Widths = Partial<Record<string, number>>
 
 export const minColumnWidth = 50
-/** Adjusted columns are not shrunk below this, nor below a third of their measured width. */
 const minAdjustedWidth = 150
 const maxAdjustmentRatio = 3
-/** Leftover space smaller than this is spread over the columns so the table ends at the right border. */
 const snapDistance = 10
-/** Kept free to avoid an unneeded horizontal scrollbar. */
 const underfillMargin = 3
 
-export function isValidWidth(width: unknown): width is number {
+function isValidWidth(width: unknown): width is number {
   return typeof width === 'number' && Number.isFinite(width) && width >= 0
 }
 
@@ -20,9 +16,6 @@ export function widthsStorageKey(dataSetName: string): string {
   return `tapir-hyparquet:${dataSetName}:column-widths`
 }
 
-/**
- * Reads user-set widths. Invalid or too small entries are dropped.
- */
 export function loadWidths(storage: Pick<Storage, 'getItem'>, key: string): Widths {
   let value: unknown
   try {
@@ -41,18 +34,12 @@ export function saveWidths(storage: Pick<Storage, 'setItem' | 'removeItem'>, key
 }
 
 interface AdjustInput {
-  /** visible columns, in display order */
   columns: string[]
   fixed: Widths
   measured: Widths
-  /** space available for the data columns; undefined = unknown, no adjustment */
   maxTotalWidth?: number
 }
 
-/**
- * Shrinks the widest measured columns (never fixed ones) so the table fits `maxTotalWidth`.
- * Columns without a width count as `minColumnWidth`. Returns only the columns whose width changed.
- */
 export function adjustWidths({ columns, fixed, measured, maxTotalWidth }: AdjustInput): Widths {
   if (maxTotalWidth === undefined) return {}
   const measuredColumns = columns.filter(name => fixed[name] === undefined && measured[name] !== undefined)
@@ -64,7 +51,6 @@ export function adjustWidths({ columns, fixed, measured, maxTotalWidth }: Adjust
 
   const adjusted: Widths = {}
 
-  // group shrinkable columns by measured width, narrowest first
   const groupsByWidth = new Map<number, { name: string, minWidth: number }[]>()
   for (const name of measuredColumns) {
     const width = measured[name]
@@ -79,7 +65,6 @@ export function adjustWidths({ columns, fixed, measured, maxTotalWidth }: Adjust
     .map(([width, members]) => ({ width, members }))
     .sort((a, b) => a.width - b.width)
 
-  // shrink the widest group towards the next widest, repeatedly, until the surplus is gone
   while (groups.length > 0 && surplus > 0) {
     const widest = groups.pop()
     if (!widest) break
@@ -105,7 +90,6 @@ export function adjustWidths({ columns, fixed, measured, maxTotalWidth }: Adjust
     }
   }
 
-  // a small gap left over: widen the measured columns slightly to reach the right border
   if (surplus < 0 && surplus > -snapDistance) {
     const growable = measuredColumns.map(name => ({ name, width: adjusted[name] ?? measured[name] ?? minColumnWidth }))
     const base = Math.floor(-surplus / growable.length)

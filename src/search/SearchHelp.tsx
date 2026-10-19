@@ -1,11 +1,6 @@
 import type { JSX } from 'solid-js'
 import { createUniqueId } from 'solid-js'
 
-/**
- * (i) button that opens the help in a modal dialog: focus moves to its heading, the page behind is inert,
- * Esc, Close or a click outside closes it and focus returns to the button.
- * Text: PLAN.md 4.2 draft, to be reviewed with the client.
- */
 export default function SearchHelp(): JSX.Element {
   const titleId = createUniqueId()
   let dialog: HTMLDialogElement | undefined
@@ -20,7 +15,6 @@ export default function SearchHelp(): JSX.Element {
       aria-haspopup="dialog"
       onClick={() => {
         dialog?.showModal()
-        // start reading at the top instead of on the Close button
         title?.focus()
       }}
     >
@@ -31,10 +25,9 @@ export default function SearchHelp(): JSX.Element {
       ref={el => { dialog = el }}
       class="search-help"
       aria-labelledby={titleId}
-      // browsers differ in restoring focus after close
       onClose={() => button?.focus()}
       onClick={event => {
-        // the dialog element itself is only hit on the backdrop; content sits in the inner div
+        // only the backdrop hits the dialog element itself
         if (event.target === event.currentTarget) event.currentTarget.close()
       }}
     >

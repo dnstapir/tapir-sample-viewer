@@ -10,18 +10,14 @@ import type { AsyncBuffer, ColumnData, FileMetaData } from 'hyparquet'
 import { parquetRead, parquetSchema } from 'hyparquet'
 import { compressors } from 'hyparquet-compressors'
 
-export type ParquetDataFrame = DataFrame<{ parquet: FileMetaData }>
-
-export interface RowChunk {
+interface RowChunk {
   rowStart: number
   rowEnd: number
 }
 
 const maxChunkRows = 1000
 
-/**
- * Splits the file into read units of at most `maxRows` rows that never cross a row group boundary.
- */
+// chunks never cross a row group boundary
 export function planChunks(metadata: FileMetaData, maxRows = maxChunkRows): RowChunk[] {
   const chunks: RowChunk[] = []
   let groupStart = 0
@@ -35,11 +31,7 @@ export function planChunks(metadata: FileMetaData, maxRows = maxChunkRows): RowC
   return chunks
 }
 
-/**
- * Lazily loaded, unsorted DataFrame over a parquet file.
- * Cells are decoded per chunk and column on `fetch`, cached forever, and announced with a `resolve` event.
- */
-export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): ParquetDataFrame {
+export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): DataFrame {
   const columnDescriptors = parquetSchema(metadata).children.map(child => ({ name: child.element.name }))
   const numRows = Number(metadata.num_rows)
   const data = { numRows, columnDescriptors }
@@ -82,7 +74,6 @@ export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): Par
   return {
     numRows,
     columnDescriptors,
-    metadata: { parquet: metadata },
     eventTarget,
     getRowNumber({ row, orderBy }) {
       validateGetRowNumberParams({ row, orderBy, data })

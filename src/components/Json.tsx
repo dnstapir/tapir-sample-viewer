@@ -1,3 +1,4 @@
+/* Ported from hyperparam's Json component (MIT). */
 import type { JSX } from 'solid-js'
 import { For, Match, Show, Switch, createMemo, createSignal, onCleanup, onMount, untrack } from 'solid-js'
 import { formatHexDump, previewCount, shouldObjectCollapse } from '../lib/json.ts'
@@ -6,26 +7,15 @@ import './Json.css'
 const defaultPageLimit = 100
 const defaultWidth = 320
 
-interface JsonProps {
-  json: unknown
-  /** expand the top-level object/array (default true) */
-  expandRoot?: boolean
-}
-
 interface ContentProps {
   json: unknown
   label?: string
   expandRoot?: boolean
 }
 
-/**
- * Collapsible JSON viewer (Solid port of hyperparam's Json component).
- * BigInt, Date and byte arrays are rendered even though they are not JSON.
- * Toggles are buttons with `aria-expanded` (disclosure pattern).
- */
-export default function Json(props: JsonProps): JSX.Element {
+export default function Json(props: { json: unknown }): JSX.Element {
   return <div class="json">
-    <JsonContent json={props.json} expandRoot={props.expandRoot ?? true} />
+    <JsonContent json={props.json} expandRoot />
   </div>
 }
 

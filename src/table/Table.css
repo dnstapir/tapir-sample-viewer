@@ -1,4 +1,4 @@
-/* Ported from hightable/dist/HighTable.css (MIT), styled variant; class names adapted. */
+/* Ported from HighTable.css (MIT). */
 .table {
   --row-number-characters: 3;
   --row-number-width: calc((var(--row-number-characters) + 2) * 0.68 * 1ch);
@@ -22,7 +22,7 @@
 .table * {
   box-sizing: border-box;
 }
-/* short windows (e.g. 400 % zoom): the page scrolls first, then the table fills the window (WCAG 1.4.10) */
+/* short windows (e.g. 400 % zoom): the page scrolls, then the table fills the window */
 @media (max-height: 40rem) {
   .table {
     flex: none;
@@ -77,13 +77,12 @@
   outline-offset: -2px;
 }
 
-/* column headers */
 .table thead th {
   background-color: var(--header-background);
   border-bottom: 2px solid #ccc;
   color: #444;
   cursor: pointer;
-  /* room for sort indicator, menu button and resize handle (24px each, WCAG 2.5.8) */
+  /* sort indicator, menu button and resize handle, 24px each (WCAG 2.5.8) */
   padding-right: calc(48px + 1rem);
   position: sticky;
   top: 0;
@@ -146,7 +145,6 @@
   position: absolute;
   right: 0;
   top: 1px;
-  /* wide hit area, thin visible line (WCAG 2.5.8) */
   width: 24px;
   z-index: calc(var(--header-z) + 1);
 }
@@ -156,7 +154,6 @@
   outline: none;
 }
 
-/* corner (row number header) and row numbers */
 .table .table-corner {
   background-color: #f9f4ff;
   border-right: 1px solid #ccc;
@@ -188,7 +185,6 @@
   z-index: var(--header-z);
 }
 
-/* loading placeholders */
 .table tbody td[aria-busy="true"] {
   position: relative;
 }

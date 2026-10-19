@@ -18,8 +18,6 @@ describe('Table', () => {
   beforeAll(async () => {
     [sample] = await loadSamples()
     expected = await parquetReadObjects({ file: await openFile(sample.path), metadata: sample.metadata })
-    // jsdom has no layout: scrollIntoView is missing
-    Element.prototype.scrollIntoView = vi.fn()
   })
   beforeEach(async () => {
     localStorage.clear()
@@ -146,7 +144,6 @@ describe('Table', () => {
   it('has one tab stop and moves it with the arrow keys', async () => {
     const { grid } = renderTable()
     await loaded(grid)
-    // the scroll area is no extra tab stop while the focusable cell is rendered
     expect(grid.closest('.table-scroll')?.getAttribute('tabindex')).toBe('-1')
     const corner = within(grid).getByRole('columnheader', { name: 'Row number' })
     expect(corner.getAttribute('tabindex')).toBe('0')

@@ -10,17 +10,12 @@ import type { SearchPredicate } from './search.ts'
 
 export interface SearchResult {
   df: DataFrame
-  /** table caption, also the key for saved column widths */
+  // key for saved column widths
   name: string
   matches: number
-  /** number of files searched */
   files: number
 }
 
-/**
- * Indexes of the rows matching the predicate, in file order.
- * Reads only the predicate's columns, one row group at a time; values are discarded.
- */
 export async function scanRows({ file, metadata, predicate, signal }: {
   file: AsyncBuffer
   metadata: FileMetaData
@@ -28,7 +23,6 @@ export async function scanRows({ file, metadata, predicate, signal }: {
   signal?: AbortSignal
 }): Promise<number[]> {
   const available = new Set(parquetSchema(metadata).children.map(child => child.element.name))
-  // missing columns read as empty
   const columns = predicate.columns.filter(column => available.has(column))
   const indexes: number[] = []
   let rowStart = 0
@@ -47,7 +41,6 @@ export async function scanRows({ file, metadata, predicate, signal }: {
   return indexes
 }
 
-/** Matching rows of one data set, sortable. */
 export async function searchDataSet(dataSet: DataSet, predicate: SearchPredicate, signal?: AbortSignal): Promise<SearchResult> {
   const indexes = await scanRows({ file: dataSet.file, metadata: dataSet.metadata, predicate, signal })
   return {
@@ -58,7 +51,6 @@ export async function searchDataSet(dataSet: DataSet, predicate: SearchPredicate
   }
 }
 
-/** Matching rows of all data sets in one table with a File column, sortable. */
 export async function searchAll({ entries, load, predicate, signal, onProgress }: {
   entries: DataSetEntry[]
   load: (entry: DataSetEntry) => Promise<DataSet>

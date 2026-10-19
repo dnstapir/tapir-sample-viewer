@@ -3,31 +3,25 @@ import { For, Show, createEffect, createSignal, createUniqueId, onCleanup } from
 import { Portal } from 'solid-js/web'
 import './Dropdown.css'
 
-export interface DropdownItem {
+interface DropdownItem {
   label: string
   onSelect: () => void
-  /** set to render a radio item (`menuitemradio` with `aria-checked`) */
+  // set for a radio item
   checked?: boolean
 }
 
 interface DropdownProps {
   label: JSX.Element
   items: DropdownItem[]
-  align?: 'left' | 'right'
-  /** accessible name when the visible label is an icon */
   ariaLabel?: string
-  /** hide the ▼ caret, e.g. for icon buttons */
   noCaret?: boolean
   buttonClass?: string
   tabIndex?: number
-  /** render the menu in document.body with fixed position, for containers that clip overflow */
+  // fixed position in a portal, for containers that clip overflow
   portal?: boolean
 }
 
-/**
- * Menu button following the WAI-ARIA APG menu button pattern:
- * https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/
- */
+// WAI-ARIA APG menu button pattern
 export default function Dropdown(props: DropdownProps): JSX.Element {
   const buttonId = createUniqueId()
   const menuId = createUniqueId()
@@ -77,7 +71,7 @@ export default function Dropdown(props: DropdownProps): JSX.Element {
       event.stopPropagation()
       openAt(props.items.length - 1)
     } else if (event.key === 'Enter' || event.key === ' ') {
-      // the native click follows; keep the key from parents such as a sortable table header
+      // keep the key from the sortable table header around the button
       event.stopPropagation()
     }
   }
@@ -141,7 +135,7 @@ export default function Dropdown(props: DropdownProps): JSX.Element {
     </For>
   </div>
 
-  return <div ref={el => { root = el }} class={`dropdown dropdown-${props.align ?? 'left'}`}>
+  return <div ref={el => { root = el }} class="dropdown">
     <button
       ref={el => { button = el }}
       id={buttonId}
@@ -166,7 +160,6 @@ export default function Dropdown(props: DropdownProps): JSX.Element {
     </button>
     <Show when={open()}>
       <Show when={props.portal} fallback={menuContent()}>
-        {/* inside the nearest landmark, so the menu is not outside all landmarks */}
         <Portal mount={root?.closest('main') ?? document.body}>{menuContent()}</Portal>
       </Show>
     </Show>

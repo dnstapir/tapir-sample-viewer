@@ -1,6 +1,6 @@
 import type { ColumnChunk, ColumnMetaData, FileMetaData } from 'hyparquet'
 
-export interface RowGroupItem {
+interface RowGroupItem {
   type: 'rowgroup'
   start: bigint
   groupIndex: number
@@ -8,7 +8,7 @@ export interface RowGroupItem {
   totalByteSize: bigint
 }
 
-export interface IndexItem {
+interface IndexItem {
   type: 'index'
   start: bigint
   end: bigint
@@ -17,16 +17,12 @@ export interface IndexItem {
 
 export type LayoutItem = RowGroupItem | IndexItem
 
-export interface ByteRange {
+interface ByteRange {
   name: string
   start: bigint
   end: bigint
 }
 
-/**
- * Byte range of the footer metadata: `[byteLength - metadata_length - 4, byteLength - 4)`.
- * The final 4 bytes are the trailing `PAR1` magic.
- */
 export function metadataRange(byteLength: number, metadata: FileMetaData): { start: number, end: number } {
   return {
     start: byteLength - metadata.metadata_length - 4,
@@ -34,15 +30,11 @@ export function metadataRange(byteLength: number, metadata: FileMetaData): { sta
   }
 }
 
-/**
- * Row groups plus column/offset indexes, sorted by start offset.
- */
 export function collectLayoutItems(metadata: FileMetaData): LayoutItem[] {
   const items: LayoutItem[] = []
 
   for (let groupIndex = 0; groupIndex < metadata.row_groups.length; groupIndex++) {
     const rowGroup = metadata.row_groups[groupIndex]
-    // earliest start offset among the row group's columns
     let start = BigInt(Number.MAX_SAFE_INTEGER)
     for (const column of rowGroup.columns) {
       if (column.meta_data) {
@@ -86,9 +78,6 @@ export function collectLayoutItems(metadata: FileMetaData): LayoutItem[] {
   return items
 }
 
-/**
- * Dictionary / data / index page ranges of a column chunk, in file order.
- */
 export function columnPages(columnMetadata: ColumnMetaData): ByteRange[] {
   const { dictionary_page_offset, data_page_offset, index_page_offset } = columnMetadata
   const end = getColumnRange(columnMetadata)[1]
@@ -108,10 +97,7 @@ export function columnPages(columnMetadata: ColumnMetaData): ByteRange[] {
   }))
 }
 
-/**
- * Byte range `[start, end)` of a column chunk.
- * Copied from hyparquet because it is not exported.
- */
+// copied from hyparquet, where it is not exported
 export function getColumnRange({ dictionary_page_offset, data_page_offset, total_compressed_size }: ColumnMetaData): [bigint, bigint] {
   let columnOffset = dictionary_page_offset
   if (!columnOffset || data_page_offset < columnOffset) {
