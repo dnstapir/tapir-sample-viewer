@@ -1,11 +1,9 @@
 # DNS Tapir parquet viewer (Solid)
 
-Browser viewer for DNS Tapir parquet files, built with [SolidJS](https://www.solidjs.com/) and [hyparquet](https://github.com/hyparam/hyparquet). It replaces the React app `tapir-hyparquet`; no React is shipped (CI checks the build).
+Browser viewer for DNS Tapir parquet files, built with [SolidJS](https://www.solidjs.com/) and [hyparquet](https://github.com/hyparam/hyparquet). It replaces the React app `tapir-hyparquet`.
 
-Live: https://little-mry.github.io/tapir-hyparquet-parser/
 
 ## Features
-
 - **Table**: virtualized, lazily loaded grid (only visible rows are rendered; row groups are read on demand with HTTP range requests). Sort by clicking a header (multi-column; the *Row number* header resets to file order), hide/show and resize columns (widths are remembered per file), keyboard navigation, copy a cell with Ctrl/Cmd+C.
 - **Search**: *Domain* mode follows the DNS structure (`svt`, `svt.se`, `www.svt.se`); *Columns* mode searches the chosen `label0`–`label9` columns. *Extended search* searches all files. Options take effect when you press Search or Enter. The (i) button explains the rules.
 - **Metadata**, **Layout** and **Grid** views of the parquet file structure.
