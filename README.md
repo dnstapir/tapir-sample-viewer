@@ -1,5 +1,5 @@
 # tapir-sample-viewer
-DNS TAPIR Sample Parquet Viewer
+DNS TAPIR Sample Data Viewer
 
 This is used to look at sample data from DNS TAPIR Core
 1-minute histograms (aggregates) of DNS queries. 
