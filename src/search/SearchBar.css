@@ -1,0 +1,124 @@
+.search-bar {
+  background-color: #f5f5f8;
+  border-radius: 8px;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  margin: 0 5px 5px;
+  padding: 10px 20px;
+}
+.search-bar > * + *:not(:empty) {
+  margin-top: 6px;
+}
+.search-bar p {
+  margin: 0;
+}
+.search-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.search-query-label {
+  font-weight: 600;
+}
+.search-bar input[type="search"] {
+  flex: 0 1 24rem;
+  min-width: 10rem;
+
+}
+.search-bar input[type="search"]::placeholder {
+  color: #767676;
+}
+
+.search-bar input[type="radio"],
+.search-bar input[type="checkbox"] {
+  height: auto;
+  margin: 0;
+}
+
+.search-group {
+  border: 0;
+}
+.search-group legend {
+  float: left;
+  font-weight: 600;
+  margin-right: 12px;
+}
+.search-group label,
+.search-extended {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 12px;
+  min-height: 24px;
+}
+.search-extended {
+  align-self: flex-start;
+}
+
+.search-note {
+  color: #444;
+  font-style: italic;
+}
+.search-error {
+  color: #a3001b;
+}
+.search-status {
+  color: #333;
+}
+
+.search-help-button,
+.search-help-button:active,
+.search-help-button:hover {
+  align-items: center;
+  border-radius: 50%;
+  display: inline-flex;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  width: 28px;
+}
+.search-help {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  color: #222;
+  font-size: 14px;
+  line-height: 1.5;
+  max-height: calc(100vh - 32px);
+  max-width: min(36rem, calc(100vw - 32px));
+  padding: 0;
+}
+.search-help::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+.search-help-content {
+  padding: 16px 20px;
+}
+.search-help-close {
+  margin-top: 12px;
+}
+.search-help h2:focus {
+  outline: none;
+}
+.search-help h2 {
+  margin-top: 0;
+}
+.search-help h3 {
+  font-size: 11pt;
+  margin-top: 12px;
+}
+.search-help p {
+  margin: 4px 0;
+}
+.search-help ul {
+  padding-left: 20px;
+}
+.search-help code {
+  padding: 0;
+}

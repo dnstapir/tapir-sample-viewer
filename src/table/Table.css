@@ -1,0 +1,223 @@
+/* Ported from HighTable.css (MIT). */
+.table {
+  --row-number-characters: 3;
+  --row-number-width: calc((var(--row-number-characters) + 2) * 0.68 * 1ch);
+  --header-z: 10;
+  --border-color: #ddd;
+  --header-background: #f0f0f0;
+  --focus-color: #706fb1;
+  --focus-background: #efeef6;
+  --focusable-color: #666;
+  --row-number-color: #555;
+  --hovered-row: #dbdbe5;
+  --busy-background: linear-gradient(60deg, rgba(0, 0, 0, 0.05) 25%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.05) 75%);
+  border-top: 2px solid #706fb1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  isolation: isolate;
+  min-height: 12rem;
+  position: relative;
+}
+.table * {
+  box-sizing: border-box;
+}
+/* short windows (e.g. 400 % zoom): the page scrolls, then the table fills the window */
+@media (max-height: 40rem) {
+  .table {
+    flex: none;
+    height: 100vh;
+  }
+}
+
+.table-scroll {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  scroll-padding-block-start: var(--column-header-height);
+  scroll-padding-inline-start: var(--row-number-width);
+}
+.table-scroll:focus-visible {
+  outline: 2px solid var(--focus-color);
+  outline-offset: -2px;
+}
+.table-canvas {
+  overflow-y: clip;
+  position: relative;
+}
+.table-canvas > table {
+  border-collapse: separate;
+  border-spacing: 0;
+  position: absolute;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  height: 32px;
+  line-height: 1.5;
+  max-width: 40rem;
+  overflow: hidden;
+  padding: 4px 10px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.table th[tabindex="0"],
+.table td[tabindex="0"] {
+  background-color: #f0f0f0;
+  outline: 2px solid var(--focusable-color);
+  outline-offset: -2px;
+}
+.table th:focus,
+.table td:focus {
+  background-color: var(--focus-background);
+  outline: 2px solid var(--focus-color);
+  outline-offset: -2px;
+}
+
+.table thead th {
+  background-color: var(--header-background);
+  border-bottom: 2px solid #ccc;
+  color: #444;
+  cursor: pointer;
+  /* sort indicator, menu button and resize handle, 24px each (WCAG 2.5.8) */
+  padding-right: calc(48px + 1rem);
+  position: sticky;
+  top: 0;
+  z-index: var(--header-z);
+}
+.table thead th[data-fixed-width="true"]::before {
+  background-color: #9d9cd5;
+  border-radius: 50%;
+  content: "";
+  height: 4px;
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  width: 4px;
+}
+.table .sort-indicator {
+  color: #bbb;
+  position: absolute;
+  right: 48px;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+}
+.table th[data-order-index="0"] .sort-indicator {
+  color: inherit;
+}
+.table thead .dropdown {
+  display: flex;
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.table .column-menu-button,
+.table .column-menu-button:active {
+  align-items: center;
+  background-color: var(--header-background);
+  border-radius: 50%;
+  color: #444;
+  display: inline-flex;
+  font-weight: 700;
+  height: 24px;
+  justify-content: center;
+  opacity: 0;
+  padding: 0;
+  transition: opacity 0.2s ease;
+  width: 24px;
+}
+.table thead th:hover .column-menu-button,
+.table .column-menu-button:focus-visible,
+.table .column-menu-button[aria-expanded="true"],
+.table thead th:focus-within .column-menu-button {
+  background-color: #dbdbe5;
+  opacity: 1;
+}
+.table .column-resizer {
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  right: 0;
+  top: 1px;
+  width: 24px;
+  z-index: calc(var(--header-z) + 1);
+}
+.table .column-resizer:hover,
+.table .column-resizer:focus {
+  border-right: 4px solid #9d9cd5;
+  outline: none;
+}
+
+.table .table-corner {
+  background-color: #f9f4ff;
+  border-right: 1px solid #ccc;
+  box-shadow: inset 0 0 4px #0003;
+  color: #bbb;
+  left: 0;
+  max-width: var(--row-number-width);
+  min-width: var(--row-number-width);
+  padding: 0;
+  position: sticky;
+  text-align: center;
+  top: 0;
+  z-index: calc(var(--header-z) + 3);
+}
+.table .table-corner[aria-sort="ascending"] {
+  color: #444;
+}
+.table th[role="rowheader"] {
+  background-color: #f0f0f0;
+  border-right: 1px solid #ccc;
+  color: var(--row-number-color);
+  font-size: 0.68rem;
+  left: 0;
+  max-width: var(--row-number-width);
+  min-width: var(--row-number-width);
+  padding: 0;
+  position: sticky;
+  text-align: center;
+  z-index: var(--header-z);
+}
+
+.table tbody td[aria-busy="true"] {
+  position: relative;
+}
+.table tbody td[aria-busy="true"]::after {
+  animation: table-shimmer 3s infinite linear;
+  background: var(--busy-background);
+  background-size: 120px 100%;
+  border-radius: 4px;
+  content: "";
+  inset: 8px;
+  position: absolute;
+}
+.table tbody tr:nth-child(2n) td[aria-busy="true"]::after {
+  animation-delay: -1s;
+}
+.table tbody tr:nth-child(3n) td[aria-busy="true"]::after {
+  animation-delay: -2s;
+}
+@keyframes table-shimmer {
+  0% { background-position: -120px 0; }
+  100% { background-position: 120px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table tbody td[aria-busy="true"]::after {
+    animation: none;
+  }
+}
+
+@media (hover: hover) {
+  .table tbody tr:hover {
+    background-color: var(--hovered-row);
+  }
+  .table tbody tr:hover th[role="rowheader"] {
+    background-color: #ccd;
+  }
+}

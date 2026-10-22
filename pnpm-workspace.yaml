@@ -1,0 +1,11 @@
+allowBuilds:
+  esbuild: true
+
+# hightable declares react/react-dom as peers; only its React-free `hightable/dataframe` subpath is used.
+# @solidjs/testing-library declares @solidjs/router as a peer; it is only needed for router tests.
+autoInstallPeers: false
+peerDependencyRules:
+  ignoreMissing:
+    - react
+    - react-dom
+    - '@solidjs/router'
