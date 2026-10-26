@@ -1,8 +1,6 @@
 # tapir-sample-viewer
 DNS TAPIR Sample Data Viewer
 
-https://dnstapir.github.io/tapir-sample-viewer/
-
 This can be used to look at sample data from DNS TAPIR Core
 1-minute histograms (aggregates) of DNS queries. 
 
