@@ -23,7 +23,7 @@ interface ByteRange {
   end: bigint
 }
 
-export function metadataRange(byteLength: number, metadata: FileMetaData): { start: number, end: number } {
+export function metadataRange(byteLength: number, metadata: FileMetaData): { start: number; end: number } {
   return {
     start: byteLength - metadata.metadata_length - 4,
     end: byteLength - 4,
@@ -87,7 +87,7 @@ export function columnPages(columnMetadata: ColumnMetaData): ByteRange[] {
     { name: 'Index', offset: index_page_offset },
     { name: 'End', offset: end },
   ]
-    .filter((page): page is { name: string, offset: bigint } => page.offset !== undefined)
+    .filter((page): page is { name: string; offset: bigint } => page.offset !== undefined)
     .sort((a, b) => Number(a.offset - b.offset))
 
   return offsets.slice(0, -1).map(({ name, offset }, index) => ({
@@ -98,7 +98,11 @@ export function columnPages(columnMetadata: ColumnMetaData): ByteRange[] {
 }
 
 // copied from hyparquet, where it is not exported
-export function getColumnRange({ dictionary_page_offset, data_page_offset, total_compressed_size }: ColumnMetaData): [bigint, bigint] {
+export function getColumnRange({
+  dictionary_page_offset,
+  data_page_offset,
+  total_compressed_size,
+}: ColumnMetaData): [bigint, bigint] {
   let columnOffset = dictionary_page_offset
   if (!columnOffset || data_page_offset < columnOffset) {
     columnOffset = data_page_offset

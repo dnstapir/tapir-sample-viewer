@@ -1,9 +1,8 @@
 import type { DataFrame } from 'hightable/dataframe'
 import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer, FileMetaData } from 'hyparquet'
-import { parquetMetadataAsync } from 'hyparquet'
+import { asyncBufferFromUrl, cachedAsyncBuffer, parquetMetadataAsync } from 'hyparquet'
 import { parquetDataFrame } from './parquetDataFrame.ts'
-import { openParquetUrl } from './source.ts'
 
 export interface DataSetEntry {
   name: string
@@ -14,31 +13,43 @@ export interface DataSet extends DataSetEntry {
   byteLength: number
   metadata: FileMetaData
   file: AsyncBuffer
-  // unsorted; search results are views on it and share its cell cache
   rows: DataFrame
   df: DataFrame
 }
+const baseUrl = 'https://public.test.dnstapir.se/parquet-samples/'
 
-const parquetUrls = import.meta.glob<string>('../parquets/*.parquet', {
-  eager: true,
-  query: '?url',
-  import: 'default',
-})
+export async function listDataSets(signal?: AbortSignal): Promise<DataSetEntry[]> {
+  const res = await fetch(new URL('index.json', baseUrl), { signal })
+  if (!res.ok) throw new Error(`Failed to fetch index.json: ${res.status}`)
 
-export function listDataSets(): DataSetEntry[] {
-  return Object.entries(parquetUrls)
-    .map(([path, url]) => ({ name: path.split('/').pop() ?? path, url }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const data: unknown = await res.json()
+  const files = typeof data === 'object' && data !== null && 'files' in data ? data.files : undefined
+  const fileName = /^[\w.-]+\.parquet$/
+  if (
+    !Array.isArray(files) ||
+    !files.every((name): name is string => typeof name === 'string' && fileName.test(name))
+  ) {
+    throw new Error('Invalid index.json format')
+  }
+
+  return files.map(name => ({ name, url: new URL(name, baseUrl).href })).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export async function loadDataSet({ name, url }: DataSetEntry): Promise<DataSet> {
-  const file = await openParquetUrl(url)
+  const file = cachedAsyncBuffer(await asyncBufferFromUrl({ url }))
   const metadata = await parquetMetadataAsync(file)
   const rows = parquetDataFrame(file, metadata)
-  return { name, url, byteLength: file.byteLength, metadata, file, rows, df: sortableDataFrame(rows) }
+  return {
+    name,
+    url,
+    byteLength: file.byteLength,
+    metadata,
+    file,
+    rows,
+    df: sortableDataFrame(rows),
+  }
 }
 
-// failed loads are not cached, so they can be retried
 export function createDataSetLoader(load = loadDataSet): (entry: DataSetEntry) => Promise<DataSet> {
   const cache = new Map<string, Promise<DataSet>>()
   return entry => {
@@ -46,7 +57,9 @@ export function createDataSetLoader(load = loadDataSet): (entry: DataSetEntry) =
     if (!pending) {
       pending = load(entry)
       cache.set(entry.url, pending)
-      pending.catch(() => { cache.delete(entry.url) })
+      pending.catch(() => {
+        cache.delete(entry.url)
+      })
     }
     return pending
   }

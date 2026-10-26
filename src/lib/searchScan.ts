@@ -10,13 +10,17 @@ import type { SearchPredicate } from './search.ts'
 
 export interface SearchResult {
   df: DataFrame
-  // key for saved column widths
   name: string
   matches: number
   files: number
 }
 
-export async function scanRows({ file, metadata, predicate, signal }: {
+export async function scanRows({
+  file,
+  metadata,
+  predicate,
+  signal,
+}: {
   file: AsyncBuffer
   metadata: FileMetaData
   predicate: SearchPredicate
@@ -41,7 +45,11 @@ export async function scanRows({ file, metadata, predicate, signal }: {
   return indexes
 }
 
-export async function searchDataSet(dataSet: DataSet, predicate: SearchPredicate, signal?: AbortSignal): Promise<SearchResult> {
+export async function searchDataSet(
+  dataSet: DataSet,
+  predicate: SearchPredicate,
+  signal?: AbortSignal,
+): Promise<SearchResult> {
   const indexes = await scanRows({ file: dataSet.file, metadata: dataSet.metadata, predicate, signal })
   return {
     df: sortableDataFrame(filteredDataFrame(dataSet.rows, indexes)),
@@ -51,7 +59,13 @@ export async function searchDataSet(dataSet: DataSet, predicate: SearchPredicate
   }
 }
 
-export async function searchAll({ entries, load, predicate, signal, onProgress }: {
+export async function searchAll({
+  entries,
+  load,
+  predicate,
+  signal,
+  onProgress,
+}: {
   entries: DataSetEntry[]
   load: (entry: DataSetEntry) => Promise<DataSet>
   predicate: SearchPredicate

@@ -7,10 +7,10 @@ interface LayoutProps {
 }
 
 export default function Layout(props: LayoutProps): JSX.Element {
-  return <div class="content-container">
-    <div class="content">
-      {props.children}
+  return (
+    <div class="content-container">
+      <div class="content">{props.children}</div>
+      <ErrorBar error={props.error} />
     </div>
-    <ErrorBar error={props.error} />
-  </div>
+  )
 }

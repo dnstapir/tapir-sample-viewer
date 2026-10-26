@@ -1,5 +1,5 @@
-import { parquetMetadataAsync } from 'hyparquet'
 import type { AsyncBuffer, FileMetaData } from 'hyparquet'
+import { parquetMetadataAsync } from 'hyparquet'
 // explicit subpath: vite-plugin-solid makes vitest resolve hyparquet's browser entry
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
 
@@ -25,11 +25,13 @@ export function loadSamples(): Promise<Sample[]> {
   if (samplePaths.length === 0) {
     return Promise.reject(new Error('no sample parquet files found in src/parquets/'))
   }
-  return Promise.all(samplePaths.map(async relative => {
-    const path = new URL(relative, import.meta.url).pathname
-    const file = await openFile(path)
-    const metadata = await parquetMetadataAsync(file)
-    const name = relative.split('/').pop() ?? relative
-    return { name, path, byteLength: file.byteLength, metadata }
-  }))
+  return Promise.all(
+    samplePaths.map(async relative => {
+      const path = new URL(relative, import.meta.url).pathname
+      const file = await openFile(path)
+      const metadata = await parquetMetadataAsync(file)
+      const name = relative.split('/').pop() ?? relative
+      return { name, path, byteLength: file.byteLength, metadata }
+    }),
+  )
 }

@@ -9,17 +9,22 @@ describe('Page', () => {
   it('enables the file selector as soon as Extended search is unchecked, before searching', () => {
     const onSelect = vi.fn()
     const onSearch = vi.fn()
-    render(() => <Page
-      entries={[{ name: 'a.parquet', url: '/a' }, { name: 'b.parquet', url: '/b' }]}
-      selectedIndex={0}
-      onSelect={onSelect}
-      loading
-      onSearch={onSearch}
-      searchStatus=""
-      searching={false}
-      extended
-      onError={vi.fn()}
-    />)
+    render(() => (
+      <Page
+        entries={[
+          { name: 'a.parquet', url: '/a' },
+          { name: 'b.parquet', url: '/b' },
+        ]}
+        selectedIndex={0}
+        onSelect={onSelect}
+        loading
+        onSearch={onSearch}
+        searchStatus=""
+        searching={false}
+        extended
+        onError={vi.fn()}
+      />
+    ))
     const select = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Choose file' })
     const extended = screen.getByRole('checkbox', { name: 'Extended search (all files)' })
 

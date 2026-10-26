@@ -26,7 +26,6 @@
 .search-bar input[type="search"] {
   flex: 0 1 24rem;
   min-width: 10rem;
-
 }
 .search-bar input[type="search"]::placeholder {
   color: #767676;

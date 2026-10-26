@@ -1,14 +1,14 @@
 import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer, FileMetaData, RowGroup } from 'hyparquet'
 import { parquetReadObjects } from 'hyparquet'
-import { compressors } from 'hyparquet-compressors'
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
+import { compressors } from 'hyparquet-compressors'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { parquetDataFrame, planChunks } from '../src/lib/parquetDataFrame.ts'
 import type { Sample } from './samples.ts'
 import { loadSamples } from './samples.ts'
 
-function countingBuffer(file: AsyncBuffer): { file: AsyncBuffer, reads: () => number } {
+function countingBuffer(file: AsyncBuffer): { file: AsyncBuffer; reads: () => number } {
   let count = 0
   return {
     file: {
@@ -44,7 +44,7 @@ describe('parquetDataFrame on sample files', () => {
   let file: AsyncBuffer
   let expected: Record<string, unknown>[]
   beforeAll(async () => {
-    [sample] = await loadSamples()
+    ;[sample] = await loadSamples()
     file = await asyncBufferFromFile(sample.path)
     expected = await parquetReadObjects({ file, metadata: sample.metadata, compressors })
   })
@@ -82,7 +82,9 @@ describe('parquetDataFrame on sample files', () => {
   it('dispatches resolve when cells arrive', async () => {
     const df = parquetDataFrame(file, sample.metadata)
     let resolved = 0
-    df.eventTarget?.addEventListener('resolve', () => { resolved++ })
+    df.eventTarget?.addEventListener('resolve', () => {
+      resolved++
+    })
     await df.fetch?.({ rowStart: 0, rowEnd: 1, columns: ['label1'] })
     expect(resolved).toBeGreaterThan(0)
   })
@@ -103,8 +105,9 @@ describe('parquetDataFrame on sample files', () => {
     const df = parquetDataFrame(file, sample.metadata)
     const controller = new AbortController()
     controller.abort()
-    await expect(df.fetch?.({ rowStart: 0, rowEnd: 1, columns: ['label1'], signal: controller.signal }))
-      .rejects.toThrow()
+    await expect(
+      df.fetch?.({ rowStart: 0, rowEnd: 1, columns: ['label1'], signal: controller.signal }),
+    ).rejects.toThrow()
   })
 
   it('retries a chunk after a failed read', async () => {
@@ -127,7 +130,10 @@ describe('parquetDataFrame on sample files', () => {
     const df = sortableDataFrame(parquetDataFrame(file, sample.metadata))
     const orderBy = [{ column: 'label1', direction: 'ascending' as const }]
     await df.fetch?.({ rowStart: 0, rowEnd: df.numRows, columns: ['label1'], orderBy })
-    const values = Array.from({ length: df.numRows }, (_, row): unknown => df.getCell({ row, column: 'label1', orderBy })?.value)
+    const values = Array.from(
+      { length: df.numRows },
+      (_, row): unknown => df.getCell({ row, column: 'label1', orderBy })?.value,
+    )
     expect(values).toEqual(expected.map(r => r.label1).sort())
   })
 })

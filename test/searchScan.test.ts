@@ -1,8 +1,8 @@
 import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer } from 'hyparquet'
 import { parquetReadObjects } from 'hyparquet'
-import { compressors } from 'hyparquet-compressors'
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
+import { compressors } from 'hyparquet-compressors'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { concatDataFrame, fileColumn } from '../src/lib/concatDataFrame.ts'
 import type { DataSet } from '../src/lib/dataset.ts'
@@ -30,20 +30,27 @@ function predicate(query: string, options = defaultSearchOptions): SearchPredica
 describe('search on sample files', () => {
   let loaded: Loaded[]
   beforeAll(async () => {
-    loaded = await Promise.all((await loadSamples()).map(async sample => {
-      const file = await asyncBufferFromFile(sample.path)
-      const rows = await parquetReadObjects({ file, metadata: sample.metadata, compressors })
-      const df = parquetDataFrame(file, sample.metadata)
-      const dataSet = {
-        name: sample.name, url: sample.path, byteLength: sample.byteLength,
-        metadata: sample.metadata, file, rows: df, df: sortableDataFrame(df),
-      }
-      return { sample, file, rows, dataSet }
-    }))
+    loaded = await Promise.all(
+      (await loadSamples()).map(async sample => {
+        const file = await asyncBufferFromFile(sample.path)
+        const rows = await parquetReadObjects({ file, metadata: sample.metadata, compressors })
+        const df = parquetDataFrame(file, sample.metadata)
+        const dataSet = {
+          name: sample.name,
+          url: sample.path,
+          byteLength: sample.byteLength,
+          metadata: sample.metadata,
+          file,
+          rows: df,
+          df: sortableDataFrame(df),
+        }
+        return { sample, file, rows, dataSet }
+      }),
+    )
   })
 
   function bruteForce({ rows }: Loaded, search: SearchPredicate): number[] {
-    return rows.flatMap((row, i) => search.matches(row) ? [i] : [])
+    return rows.flatMap((row, i) => (search.matches(row) ? [i] : []))
   }
 
   it('scanRows finds the same rows as filtering all rows', async () => {
@@ -52,9 +59,11 @@ describe('search on sample files', () => {
     const domain = [row.label2, row.label1, row.label0].filter(Boolean).join('.')
     const searches = [
       predicate(domain),
+      predicate(domain, { ...defaultSearchOptions, match: 'exact' }),
       predicate(String(row.label1).slice(0, 2)),
-      predicate('se', { mode: 'columns', columns: ['label0'], extended: false }),
-      predicate('xx-no-match', { mode: 'columns', columns: ['label1', 'label9'], extended: false }),
+      predicate('se', { ...defaultSearchOptions, mode: 'columns', columns: ['label0'] }),
+      predicate('xx-no-match', { ...defaultSearchOptions, mode: 'columns', columns: ['label1', 'label9'] }),
+      predicate(String(row.label1), { ...defaultSearchOptions, mode: 'columns', columns: ['label1'], match: 'exact' }),
     ]
     for (const item of loaded) {
       for (const search of searches) {
@@ -69,8 +78,14 @@ describe('search on sample files', () => {
     const [first] = loaded
     const controller = new AbortController()
     controller.abort()
-    await expect(scanRows({ file: first.file, metadata: first.sample.metadata, predicate: predicate('se'), signal: controller.signal }))
-      .rejects.toThrow()
+    await expect(
+      scanRows({
+        file: first.file,
+        metadata: first.sample.metadata,
+        predicate: predicate('se'),
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow()
   })
 
   it('searchDataSet returns a view with original row numbers and lazily fetched cells', async () => {
@@ -88,7 +103,7 @@ describe('search on sample files', () => {
   })
 
   it('searchAll stacks matches of every file with a File column and reports progress', async () => {
-    const search = predicate('se', { mode: 'columns', columns: ['label0'], extended: true })
+    const search = predicate('se', { ...defaultSearchOptions, mode: 'columns', columns: ['label0'], extended: true })
     const onProgress = vi.fn()
     const result = await searchAll({
       entries: loaded.map(item => ({ name: item.dataSet.name, url: item.dataSet.url })),
@@ -136,7 +151,10 @@ describe('filteredDataFrame and concatDataFrame', () => {
     const fetch = vi.spyOn(source, 'fetch')
     const view = filteredDataFrame(source, [1, 2, 4])
     await view.fetch?.({ rowStart: 1, rowEnd: 3, columns: ['label1'] })
-    expect(fetch.mock.calls.map(([params]) => [params.rowStart, params.rowEnd])).toEqual([[2, 3], [4, 5]])
+    expect(fetch.mock.calls.map(([params]) => [params.rowStart, params.rowEnd])).toEqual([
+      [2, 3],
+      [4, 5],
+    ])
     expect(view.getCell({ row: 1, column: 'label1' })).toEqual(source.getCell({ row: 2, column: 'label1' }))
     expect(view.getRowNumber({ row: 2 })?.value).toBe(4)
   })
@@ -157,7 +175,10 @@ describe('filteredDataFrame and concatDataFrame', () => {
 
   it('concatDataFrame forwards event listeners to every part', () => {
     const [a, b] = samples.map((sample, i) => parquetDataFrame(files[i], sample.metadata))
-    const df = concatDataFrame([{ name: 'a', df: a }, { name: 'b', df: b }])
+    const df = concatDataFrame([
+      { name: 'a', df: a },
+      { name: 'b', df: b },
+    ])
     const listener = vi.fn()
     df.eventTarget?.addEventListener('resolve', listener)
     b.eventTarget?.dispatchEvent(new CustomEvent('resolve'))

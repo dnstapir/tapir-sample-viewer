@@ -9,10 +9,8 @@ export default defineConfig({
       errorRecovery: true,
     },
   },
-  // relative asset paths so the build works from a GitHub Pages sub-path
   base: './',
   test: {
-    // vite-plugin-solid defaults to jsdom; lib tests only need node
     environment: 'node',
   },
 })

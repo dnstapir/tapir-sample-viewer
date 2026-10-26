@@ -1,8 +1,13 @@
 import type { DataFrame } from 'hightable/dataframe'
-import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRowNumberParams } from 'hightable/dataframe'
+import {
+  checkSignal,
+  validateFetchParams,
+  validateGetCellParams,
+  validateGetRowNumberParams,
+} from 'hightable/dataframe'
 
-export function consecutiveRanges(rows: readonly number[]): { rowStart: number, rowEnd: number }[] {
-  const ranges: { rowStart: number, rowEnd: number }[] = []
+export function consecutiveRanges(rows: readonly number[]): { rowStart: number; rowEnd: number }[] {
+  const ranges: { rowStart: number; rowEnd: number }[] = []
   for (const row of rows) {
     const last = ranges.at(-1)
     if (last?.rowEnd === row) last.rowEnd++
@@ -11,7 +16,6 @@ export function consecutiveRanges(rows: readonly number[]): { rowStart: number, 
   return ranges
 }
 
-// row `i` is source row `indexes[i]` (ascending)
 export function filteredDataFrame(source: DataFrame, indexes: readonly number[]): DataFrame {
   const data = { numRows: indexes.length, columnDescriptors: source.columnDescriptors }
   return {
@@ -30,8 +34,9 @@ export function filteredDataFrame(source: DataFrame, indexes: readonly number[])
       checkSignal(signal)
       const fetch = source.fetch?.bind(source)
       if (!fetch) return
-      await Promise.all(consecutiveRanges(indexes.slice(rowStart, rowEnd))
-        .map(range => fetch({ ...range, columns, signal })))
+      await Promise.all(
+        consecutiveRanges(indexes.slice(rowStart, rowEnd)).map(range => fetch({ ...range, columns, signal })),
+      )
     },
   }
 }

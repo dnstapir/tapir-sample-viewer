@@ -9,7 +9,7 @@ interface ResizerProps {
 
 // pointer only; keyboard and screen-reader users resize from the column menu
 export default function ColumnResizer(props: ResizerProps): JSX.Element {
-  const [drag, setDrag] = createSignal<{ pointerId: number, startX: number, startWidth: number }>()
+  const [drag, setDrag] = createSignal<{ pointerId: number; startX: number; startWidth: number }>()
 
   function onPointerDown(event: PointerEvent) {
     if (event.button !== 0 || event.ctrlKey || event.metaKey) return
@@ -33,16 +33,20 @@ export default function ColumnResizer(props: ResizerProps): JSX.Element {
     if (drag()?.pointerId === event.pointerId) setDrag(undefined)
   }
 
-  return <span
-    class="column-resizer"
-    aria-hidden="true"
-    onPointerDown={onPointerDown}
-    onPointerMove={onPointerMove}
-    onPointerUp={onPointerUp}
-    onDblClick={event => {
-      event.stopPropagation()
-      if (!drag()) props.autoResize()
-    }}
-    onClick={event => { event.stopPropagation() }}
-  />
+  return (
+    <span
+      class="column-resizer"
+      aria-hidden="true"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onDblClick={event => {
+        event.stopPropagation()
+        if (!drag()) props.autoResize()
+      }}
+      onClick={event => {
+        event.stopPropagation()
+      }}
+    />
+  )
 }

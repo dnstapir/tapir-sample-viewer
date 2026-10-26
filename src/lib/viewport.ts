@@ -1,6 +1,5 @@
 export const rowHeight = 33
 
-// browsers cap element heights (Firefox ≈ 17.9M px), so tall tables scroll a capped canvas proportionally
 export const maxCanvasHeight = 8_000_000
 
 export const overscanRows = 20
@@ -51,7 +50,13 @@ export function computeSlice({ numRows, scrollTop, viewportHeight, headerHeight 
   }
 }
 
-export function scrollTopForRow({ row, numRows, scrollTop, viewportHeight, headerHeight }: SliceInput & { row: number }): number | undefined {
+export function scrollTopForRow({
+  row,
+  numRows,
+  scrollTop,
+  viewportHeight,
+  headerHeight,
+}: SliceInput & { row: number }): number | undefined {
   const scale = scrollScale(numRows, viewportHeight, headerHeight)
   const virtualTop = scrollTop * scale
   const rowTop = row * rowHeight

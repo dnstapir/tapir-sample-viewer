@@ -1,7 +1,7 @@
 /* Merged from tapir-hyparquet/src/index.css and hyperparam/global.css (MIT). */
 * {
   box-sizing: border-box;
-  font-family: 'Mulish', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: "Mulish", "Helvetica Neue", Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -29,7 +29,7 @@ code {
 }
 
 button {
-  background-color: #2C3D50;
+  background-color: #2c3d50;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -101,7 +101,7 @@ main {
   align-items: center;
   border-bottom: 1px solid #ddd;
   border-radius: 8px;
-  background: #2C3D50;
+  background: #2c3d50;
   color: #eee;
   display: flex;
   font-size: 20px;
@@ -183,6 +183,10 @@ main {
   margin: 10px;
   max-width: 480px;
 }
+.cell,
+.group-header {
+  display: flex;
+}
 .layout,
 .layout .group {
   display: flex;
@@ -199,10 +203,6 @@ main {
   margin-top: 4px;
   padding: 4px;
   word-break: break-all;
-}
-.cell,
-.group-header {
-  display: flex;
 }
 .group-header > .cell-name,
 .cell > .cell-name {

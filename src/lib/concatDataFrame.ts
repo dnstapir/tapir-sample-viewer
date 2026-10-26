@@ -1,5 +1,10 @@
 import type { CustomEventTarget, DataFrame, DataFrameEvents } from 'hightable/dataframe'
-import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRowNumberParams } from 'hightable/dataframe'
+import {
+  checkSignal,
+  validateFetchParams,
+  validateGetCellParams,
+  validateGetRowNumberParams,
+} from 'hightable/dataframe'
 
 export const fileColumn = 'File'
 
@@ -15,10 +20,10 @@ export function concatDataFrame(parts: ConcatPart[]): DataFrame {
     starts.push(numRows)
     numRows += part.df.numRows
   }
-  const columnDescriptors = [{ name: fileColumn }, ...parts[0]?.df.columnDescriptors ?? []]
+  const columnDescriptors = [{ name: fileColumn }, ...(parts[0]?.df.columnDescriptors ?? [])]
   const data = { numRows, columnDescriptors }
 
-  function locate(row: number): { part: ConcatPart, row: number } {
+  function locate(row: number): { part: ConcatPart; row: number } {
     let index = parts.length - 1
     while (starts[index] > row) index--
     return { part: parts[index], row: row - starts[index] }

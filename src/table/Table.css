@@ -171,7 +171,7 @@
 .table .table-corner[aria-sort="ascending"] {
   color: #444;
 }
-.table th[role="rowheader"] {
+.table th[scope="row"] {
   background-color: #f0f0f0;
   border-right: 1px solid #ccc;
   color: var(--row-number-color);
@@ -204,8 +204,12 @@
   animation-delay: -2s;
 }
 @keyframes table-shimmer {
-  0% { background-position: -120px 0; }
-  100% { background-position: 120px 0; }
+  0% {
+    background-position: -120px 0;
+  }
+  100% {
+    background-position: 120px 0;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .table tbody td[aria-busy="true"]::after {
@@ -217,7 +221,7 @@
   .table tbody tr:hover {
     background-color: var(--hovered-row);
   }
-  .table tbody tr:hover th[role="rowheader"] {
+  .table tbody tr:hover th[scope="row"] {
     background-color: #ccd;
   }
 }

@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { formatHexDump, isPrimitive, previewCount, shouldObjectCollapse, stringifyPrimitive } from '../src/lib/json.ts'
 
 describe('isPrimitive', () => {
-  it.each([[1, true], [1n, true], [true, true], [null, true], [undefined, true]])('%s -> %s', (value, expected) => {
+  it.each([
+    [1, true],
+    [1n, true],
+    [true, true],
+    [null, true],
+    [undefined, true],
+  ])('%s -> %s', (value, expected) => {
     expect(isPrimitive(value)).toBe(expected)
   })
   it.each([['text'], [[1]], [{ a: 1 }]])('%j is not primitive', value => {
@@ -34,14 +40,40 @@ describe('shouldObjectCollapse', () => {
 
 describe('previewCount', () => {
   it('shows every entry when they fit', () => {
-    expect(previewCount([[undefined, 1], [undefined, 2]], 20)).toEqual({ count: 2, truncated: false })
+    expect(
+      previewCount(
+        [
+          [undefined, 1],
+          [undefined, 2],
+        ],
+        20,
+      ),
+    ).toEqual({ count: 2, truncated: false })
   })
   it('stops before the entry that exceeds the width, counting keys and separators', () => {
     // "a: 1" = 4, ", " + "b: 2" = 10, ", " + "c: 3" = 16
-    expect(previewCount([['a', 1], ['b', 2], ['c', 3]], 16)).toEqual({ count: 2, truncated: true })
+    expect(
+      previewCount(
+        [
+          ['a', 1],
+          ['b', 2],
+          ['c', 3],
+        ],
+        16,
+      ),
+    ).toEqual({ count: 2, truncated: true })
   })
   it('stops at the first non-primitive entry', () => {
-    expect(previewCount([[undefined, 1], [undefined, { x: 1 }], [undefined, 2]], 100)).toEqual({ count: 1, truncated: true })
+    expect(
+      previewCount(
+        [
+          [undefined, 1],
+          [undefined, { x: 1 }],
+          [undefined, 2],
+        ],
+        100,
+      ),
+    ).toEqual({ count: 1, truncated: true })
   })
 })
 

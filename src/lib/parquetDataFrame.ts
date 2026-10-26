@@ -50,7 +50,7 @@ export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): Dat
     eventTarget.dispatchEvent(new CustomEvent('resolve'))
   }
 
-  function readChunk(chunk: typeof chunks[number], columns: string[]): Promise<void> {
+  function readChunk(chunk: (typeof chunks)[number], columns: string[]): Promise<void> {
     const missing = columns.filter(column => !chunk.reads.has(column))
     if (missing.length > 0) {
       const read = parquetRead({
@@ -87,9 +87,11 @@ export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): Dat
       validateFetchParams({ rowStart, rowEnd, columns, orderBy, data })
       checkSignal(signal)
       if (!columns || columns.length === 0) return
-      await Promise.all(chunks
-        .filter(chunk => chunk.rowStart < rowEnd && chunk.rowEnd > rowStart)
-        .map(chunk => readChunk(chunk, columns)))
+      await Promise.all(
+        chunks
+          .filter(chunk => chunk.rowStart < rowEnd && chunk.rowEnd > rowStart)
+          .map(chunk => readChunk(chunk, columns)),
+      )
       checkSignal(signal)
     },
   }

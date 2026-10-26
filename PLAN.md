@@ -12,24 +12,24 @@ Reference project (read-only): `../tapir-hyparquet/`
 
 ### 2.1 Source: `tapir-hyparquet/` (React 19, npm)
 
-| File | Role | React/hyperparam coupling |
-| --- | --- | --- |
-| `src/main.tsx` | Entry; imports `hightable/src/HighTable.css`, `hyperparam/global.css`, `hyperparam/hyperparam.css`, `index.css`; mounts `<App/>` in `#app` | `react-dom/client`, `StrictMode` |
-| `src/App.tsx` | Globs `src/parquets/*.parquet` (`?url`), fetches **all** files fully, builds `DataSet[]` (metadata + `sortableDataFrame(parquetDataFrame(...))`) | `useState/useEffect/useCallback`; `hyperparam.asyncBufferFrom`, `hyperparam.parquetDataFrame` |
-| `src/Layout.tsx` | Sets `document.title`, content wrapper, `ErrorBar`, optional progress bar | `hyperparam.ErrorBar`, `hyperparam.cn` |
-| `src/Page.tsx` | Header (logo, file `<select>`), view header (size, row count, lens `Dropdown`), lens switch; `formatFileSize()` | `hightable.HighTable`, `hyperparam.Dropdown` |
-| `src/ParquetMetadata.tsx` | JSON view of `FileMetaData` | `hyperparam.Json` |
-| `src/ParquetLayout.tsx` | Byte layout: magic, row groups → columns → pages, column/offset indexes, footer; `collectLayoutItems()`, `getColumnRange()` | Plain JSX only |
-| `src/ParquetGrid.tsx` | CSS-grid visualisation of row groups × column chunks with tooltips | Plain JSX only |
-| `src/index.css` | App styles (includes unused rules: dropzone, sidebar, welcome, quick-links, `.brand`) | — |
-| `src/assets/*` | `demo.png`, provider SVGs — referenced only by unused CSS | — |
-| `src/parquets/*.parquet` | 5 sample files: 46–71 rows, 1 row group, 27 columns, SNAPPY, written by `parquet-cpp-arrow 21.0.0` | — |
-| `public/TAPIR-*.svg` | Logo + favicon | — |
-| `index.html` | `main#content > div#app`, Mulish font, meta tags, unused `#file-input` | — |
-| `vite.config.ts` | `@vitejs/plugin-react`, `optimizeDeps.exclude: ['hyperparam']`, `lightningcss.errorRecovery`, `base: './'` | React plugin |
-| `eslint.config.js` | typescript-eslint strictTypeChecked + style rules + React plugins | React plugins |
-| `test/package.test.js` | Asserts name `hyparquet-demo`, semver version, MIT, **exact** dependency versions | — |
-| `.github/workflows/deploy.yaml` | GitHub Pages deploy, Node 24, `npm ci && npm run build` | — |
+| File                            | Role                                                                                                                                             | React/hyperparam coupling                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `src/main.tsx`                  | Entry; imports `hightable/src/HighTable.css`, `hyperparam/global.css`, `hyperparam/hyperparam.css`, `index.css`; mounts `<App/>` in `#app`       | `react-dom/client`, `StrictMode`                                                              |
+| `src/App.tsx`                   | Globs `src/parquets/*.parquet` (`?url`), fetches **all** files fully, builds `DataSet[]` (metadata + `sortableDataFrame(parquetDataFrame(...))`) | `useState/useEffect/useCallback`; `hyperparam.asyncBufferFrom`, `hyperparam.parquetDataFrame` |
+| `src/Layout.tsx`                | Sets `document.title`, content wrapper, `ErrorBar`, optional progress bar                                                                        | `hyperparam.ErrorBar`, `hyperparam.cn`                                                        |
+| `src/Page.tsx`                  | Header (logo, file `<select>`), view header (size, row count, lens `Dropdown`), lens switch; `formatFileSize()`                                  | `hightable.HighTable`, `hyperparam.Dropdown`                                                  |
+| `src/ParquetMetadata.tsx`       | JSON view of `FileMetaData`                                                                                                                      | `hyperparam.Json`                                                                             |
+| `src/ParquetLayout.tsx`         | Byte layout: magic, row groups → columns → pages, column/offset indexes, footer; `collectLayoutItems()`, `getColumnRange()`                      | Plain JSX only                                                                                |
+| `src/ParquetGrid.tsx`           | CSS-grid visualisation of row groups × column chunks with tooltips                                                                               | Plain JSX only                                                                                |
+| `src/index.css`                 | App styles (includes unused rules: dropzone, sidebar, welcome, quick-links, `.brand`)                                                            | —                                                                                             |
+| `src/assets/*`                  | `demo.png`, provider SVGs — referenced only by unused CSS                                                                                        | —                                                                                             |
+| `src/parquets/*.parquet`        | 5 sample files: 46–71 rows, 1 row group, 27 columns, SNAPPY, written by `parquet-cpp-arrow 21.0.0`                                               | —                                                                                             |
+| `public/TAPIR-*.svg`            | Logo + favicon                                                                                                                                   | —                                                                                             |
+| `index.html`                    | `main#content > div#app`, Mulish font, meta tags, unused `#file-input`                                                                           | —                                                                                             |
+| `vite.config.ts`                | `@vitejs/plugin-react`, `optimizeDeps.exclude: ['hyperparam']`, `lightningcss.errorRecovery`, `base: './'`                                       | React plugin                                                                                  |
+| `eslint.config.js`              | typescript-eslint strictTypeChecked + style rules + React plugins                                                                                | React plugins                                                                                 |
+| `test/package.test.js`          | Asserts name `hyparquet-demo`, semver version, MIT, **exact** dependency versions                                                                | —                                                                                             |
+| `.github/workflows/deploy.yaml` | GitHub Pages deploy, Node 24, `npm ci && npm run build`                                                                                          | —                                                                                             |
 
 ### 2.2 Target: `tapir-hyparquet-solid/tapir-hyparquet-solid/` (Solid template, pnpm)
 
@@ -48,35 +48,38 @@ Unmodified `vite-template-solid`: `App.tsx`/`Comp.tsx` hello world, `index.tsx` 
 
 ## 4. Decisions
 
-| ID | Topic | Decision | Status |
-| --- | --- | --- | --- |
-| D1 | Package manager | pnpm | Decided |
-| D2 | Folder layout | Flatten to `tapir-hyparquet-solid/` | Decided |
-| D3 | `hyperparam` | Remove entirely; reimplement used parts in Solid / on top of `hyparquet` | Decided |
-| D4 | Table implementation | **Option A** (see 4.1); full HighTable feature parity (see Phase 5) | Decided |
-| D5 | Data loading | Load metadata lazily for the selected file only; read row data on demand via range requests | Decided |
-| D6 | Dependency versions | Caret ranges (`^x.y.z`) in `package.json`; reproducibility via committed `pnpm-lock.yaml` + `--frozen-lockfile` in CI. Drop the exact-version assertion from `package.test.js` | Decided |
-| D7 | Docs language | English | Decided |
-| D8 | Search | Two modes (Domain / Columns), Extended search, options apply on submit; see 4.2. Time span deferred | Decided (amended 2026-10-19) |
-| D9 | UI language | English for all UI text (column names from parquet are English) | Decided |
-| D10 | Accessibility | Comply with EU accessibility law: EN 301 549 (WCAG 2.1 AA for web); build to WCAG 2.2 AA, see 4.3 | Decided |
-| D11 | Data source | Parquet files bundled in `src/parquets/` for now; all file access goes through `src/lib/dataset.ts` / `source.ts` so the source can change later | Interim – final source deferred |
+| ID  | Topic                | Decision                                                                                                                                                                       | Status                                   |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| D1  | Package manager      | pnpm                                                                                                                                                                           | Decided                                  |
+| D2  | Folder layout        | Flatten to `tapir-hyparquet-solid/`                                                                                                                                            | Decided                                  |
+| D3  | `hyperparam`         | Remove entirely; reimplement used parts in Solid / on top of `hyparquet`                                                                                                       | Decided                                  |
+| D4  | Table implementation | **Option A** (see 4.1); full HighTable feature parity (see Phase 5)                                                                                                            | Decided                                  |
+| D5  | Data loading         | Load metadata lazily for the selected file only; read row data on demand via range requests                                                                                    | Decided                                  |
+| D6  | Dependency versions  | Caret ranges (`^x.y.z`) in `package.json`; reproducibility via committed `pnpm-lock.yaml` + `--frozen-lockfile` in CI. Drop the exact-version assertion from `package.test.js` | Decided                                  |
+| D7  | Docs language        | English                                                                                                                                                                        | Decided                                  |
+| D8  | Search               | Two modes (Domain / Columns), Match choice (Includes string / Exact match), leading `www.` ignored, Extended search, options apply on submit; see 4.2. Time span deferred     | Decided (amended 2026-10-19, 2026-10-23, 2026-10-26) |
+| D9  | UI language          | English for all UI text (column names from parquet are English)                                                                                                                | Decided                                  |
+| D10 | Accessibility        | Comply with EU accessibility law: EN 301 549 (WCAG 2.1 AA for web); build to WCAG 2.2 AA, see 4.3                                                                              | Decided                                  |
+| D11 | Data source          | External URL `https://public.test.dnstapir.se/parquet-samples/`, files listed in `index.json`; all file access goes through `src/lib/dataset.ts`                               | Decided 2026-10-26                       |
+| D12 | Lint / format        | Biome replaces ESLint (and Prettier is not used): `recommended` preset + Solid domain, line width 120; manual `pnpm format`; `biome ci` in CI on every push (`check.yaml`) and in `deploy.yaml`. Loss accepted: `solid/reactivity` and typescript-eslint type-aware rules. False positives turned off per file in `biome.json` `overrides` (decided 2026-10-26): dynamic `role` values (Table scroller, Dropdown items), `<table role="grid">` (allowed by ARIA in HTML, APG data grid), `tabindex="0"` on scroll regions (WCAG 2.1.1, axe `scrollable-region-focusable`), `role="group"` on non-form content, `Math.max` on `bigint` in a test | Decided 2026-10-26                       |
+| D13 | TypeScript 7         | Upgrade from 6.x as a separate step after D12 (typescript-eslint, which capped TS at `<6.1.0`, is gone; `tsc` 7.0.2 checks the project with 0 errors)                         | Decided 2026-10-26                       |
 
 ### 4.1 D4 – table options (no React)
 
 Requirement driver: files may reach 100k+ rows and several row groups.
 
-| | A. `hightable/dataframe` + `@tanstack/solid-virtual` + own Solid rendering | B. `@tanstack/solid-table` (+ `@tanstack/solid-virtual`) | C. Plain `<table>` + `<For>` |
-| --- | --- | --- | --- |
-| Data in memory | Only fetched row chunks | Entire file as JS objects | Entire file as JS objects |
-| Initial load, 100k+ rows | Metadata + first visible chunk | Full decode of all rows before first paint | Full decode + full DOM |
-| DOM size | Visible rows only | Visible rows only (with virtual) | All rows |
-| Sorting | `sortableDataFrame` (same semantics as today) | Built-in, in-memory | Hand-written |
-| Extra features | Hand-written (column resize etc.) | Filtering, resizing, grouping built in | None |
-| Reuse of current data model | Full (`DataFrame` contract unchanged) | None – new row model | None |
-| Own code | Most (cell loading states, header, scroll sync) | Medium | Least |
+|                             | A. `hightable/dataframe` + `@tanstack/solid-virtual` + own Solid rendering | B. `@tanstack/solid-table` (+ `@tanstack/solid-virtual`) | C. Plain `<table>` + `<For>` |
+| --------------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------- |
+| Data in memory              | Only fetched row chunks                                                    | Entire file as JS objects                                | Entire file as JS objects    |
+| Initial load, 100k+ rows    | Metadata + first visible chunk                                             | Full decode of all rows before first paint               | Full decode + full DOM       |
+| DOM size                    | Visible rows only                                                          | Visible rows only (with virtual)                         | All rows                     |
+| Sorting                     | `sortableDataFrame` (same semantics as today)                              | Built-in, in-memory                                      | Hand-written                 |
+| Extra features              | Hand-written (column resize etc.)                                          | Filtering, resizing, grouping built in                   | None                         |
+| Reuse of current data model | Full (`DataFrame` contract unchanged)                                      | None – new row model                                     | None                         |
+| Own code                    | Most (cell loading states, header, scroll sync)                            | Medium                                                   | Least                        |
 
 **Decision: A** (rationale):
+
 - Only A keeps lazy, row-group-chunked reads, which is the property that makes large files workable; B and C must decode the whole file up front (27 columns × 100k+ rows of objects, BigInt included) before showing anything.
 - A keeps the exact `DataFrame` / `sortableDataFrame` contract the React app already relies on, so sorting behaviour stays identical and the data layer is testable without UI.
 - `@tanstack/solid-virtual` is headless and Solid-native (peer `solid-js ^1.3.0`, v3.13.47 on npm), so rendering stays fully under our control and styling can reuse HighTable-like CSS.
@@ -91,44 +94,51 @@ Sources: npm registry (`@tanstack/solid-virtual/latest` 3.13.47, `@tanstack/soli
 Requirement (client): `label1` is the primary search target; searching on a full domain name (`www.svt.se`) is desired. Amended 2026-10-19: the user can also choose which label columns to search.
 
 **Search options** (all apply only on submit, see Trigger)
+
 - **Mode** (radio group): **Domain** (default, DNS matching below) or **Columns**.
+- **Match** (radio group, both modes; added 2026-10-23, Columns mode added the same day): **Includes string** (default; called "Include subdomains" until 2026-10-26) or **Exact match**, see Matching below.
 - **Columns** (only in Columns mode; the checkboxes are not rendered in Domain mode): checkboxes `label0`–`label9`, one or more; default `label1`. At least one must be checked: as soon as all are unchecked, the message "Choose at least one column to search." is shown (before any submit, so the user knows what to do in advance – cognitive accessibility), linked to the group with `aria-describedby`; submitting in that state does not search. `label5`–`label9` are empty in all sample files but stay selectable, as real data may use them.
 - **Extended search** (checkbox): search all files instead of the selected one.
 
 **Trigger**
+
 - `<input type="search">` + **Search** button. A search runs only on **Enter** or button click; no search-as-you-type.
 - Minimum query length: **2 characters** (normalised query) in both modes and both scopes; shorter input shows a validation message.
 - Submitting an empty query in normal scope shows the unfiltered selected file.
 - A new submit aborts a running search (`AbortController`).
 - Changing the selected file **clears the result** (the file is shown unfiltered); query and options stay in the controls.
-- Changing mode, columns or Extended search has **no effect until the next submit**. While these options differ from the last submitted search, a visible note **"Options changed – press Search to update."** is shown below the options and read where it stands (not tied to the Search button – client decision 2026-10-19; not a live region, so it is not announced on every checkbox change). Editing the query text alone does not show the note.
+- Changing mode, match, columns or Extended search has **no effect until the next submit**. While these options differ from the last submitted search, a visible note **"Options changed – press Search to update."** is shown below the options and read where it stands (not tied to the Search button – client decision 2026-10-19; not a live region, so it is not announced on every checkbox change). Editing the query text alone does not show the note.
 
-**Normalisation**: trim, lowercase; Domain mode also strips one trailing `.`.
+**Normalisation**: trim, lowercase; Domain mode also strips one trailing `.` and then one leading `www.` (decided 2026-10-23: `www` never occurs in the data, confirmed by the user; the sample files have no `www` in `label2`/`label3`). `www.` is removed only at the start (`a.www.svt.se` is unchanged).
 
 **Matching – Domain mode (follows DNS structure)**
+
 1. Split the query on `.` and reverse: last part → `label0`, next → `label1`, …
-2. The **leftmost typed label** is a **substring** match; **all other** labels must match **exactly**.
-3. Labels deeper than the query are unconstrained → **subdomains are included**.
-4. Query without a dot → substring match on `label1`.
+2. **Includes string**: the **leftmost typed label** is a **substring** match; **all other** labels must match **exactly**. Labels deeper than the query are unconstrained → **subdomains are included**.
+3. **Exact match** (added 2026-10-23): **all** typed labels must match exactly and the next deeper label must be empty → only the domain as typed. No extra condition when all 10 labels are typed.
+4. Query without a dot → `label1`. Includes string: substring match. Exact match: `label1` equals the query and `label2` is empty, i.e. only `<query>.<tld>` (changed 2026-10-26; before, a substring match with either choice).
 
-| Query | Predicate | Matches e.g. | Does not match |
-| --- | --- | --- | --- |
-| `svt` | `label1` ⊇ `svt` | `svt.se`, `svtplay.se`, `www.svt.se` | `svt.example.com` |
-| `svt.se` | `label0 = se` ∧ `label1` ⊇ `svt` | `svt.se`, `www.svt.se`, `svtplay.se` | `svt.com` |
-| `www.svt.se` | `label0 = se` ∧ `label1 = svt` ∧ `label2` ⊇ `www` | `www.svt.se`, `a.www.svt.se` | `api.svt.se` |
+| Query                  | Match              | Predicate                                                        | Matches e.g.                         | Does not match             |
+| ---------------------- | ------------------ | ---------------------------------------------------------------- | ------------------------------------ | -------------------------- |
+| `svt`                  | Includes string    | `label1` ⊇ `svt`                                                 | `svt.se`, `svtplay.se`, `api.svt.se` | `svt.example.com`          |
+| `svt`                  | Exact match        | `label1 = svt` ∧ `label2` empty                                  | `svt.se`, `svt.com`                  | `svtplay.se`, `api.svt.se` |
+| `svt.se`               | Includes string    | `label0 = se` ∧ `label1` ⊇ `svt`                                 | `svt.se`, `api.svt.se`, `svtplay.se` | `svt.com`                  |
+| `www.svt.se`           | Includes string    | same as `svt.se`                                                 | same as `svt.se`                     |                            |
+| `svt.se`, `www.svt.se` | Exact match        | `label0 = se` ∧ `label1 = svt` ∧ `label2` empty                  | `svt.se`                             | `svtplay.se`, `api.svt.se` |
+| `api.svt.se`           | Exact match        | `label0 = se` ∧ `label1 = svt` ∧ `label2 = api` ∧ `label3` empty | `api.svt.se`                         | `a.api.svt.se`             |
 
-**Matching – Columns mode**: a row matches if **any** selected column **contains** the query (OR, substring). Example: columns `label0`, query `se` → every domain under `.se` (and also e.g. `.sex`, since it is a substring match).
+**Matching – Columns mode**: a row matches if **any** selected column **contains** the query (OR, substring). Example: columns `label0`, query `se` → every domain under `.se` (and also e.g. `.sex`, since it is a substring match). With **Exact match** (2026-10-23) a selected column must **equal** the query (case-insensitive): columns `label1`, query `svt` → `svt.se`, `svt.com`, not `svtplay.se`.
 
 **Results**: the table is **filtered to matching rows only**; sorting works on the filtered view.
 
 **Scope – "Extended search" toggle** (state after submit)
 
-| Toggle | Query | Shown |
-| --- | --- | --- |
-| Off | empty | Selected file, unfiltered |
-| Off | ≥ 2 chars | Matches in the selected file |
-| On | empty / < 2 chars | Not submitted: validation message "Enter at least 2 characters to search all files."; the current table stays (with options applied on submit, an empty "no table" state is no longer needed – changed 2026-10-19) |
-| On | ≥ 2 chars | Matches from **all files** in one table with an extra **File** column |
+| Toggle | Query             | Shown                                                                                                                                                                                                              |
+| ------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Off    | empty             | Selected file, unfiltered                                                                                                                                                                                          |
+| Off    | ≥ 2 chars         | Matches in the selected file                                                                                                                                                                                       |
+| On     | empty / < 2 chars | Not submitted: validation message "Enter at least 2 characters to search all files."; the current table stays (with options applied on submit, an empty "no table" state is no longer needed – changed 2026-10-19) |
+| On     | ≥ 2 chars         | Matches from **all files** in one table with an extra **File** column                                                                                                                                              |
 
 - The file selector follows the Extended search **checkbox** directly (decided 2026-10-19, an exception to "options apply on submit"): disabled while it is checked, enabled as soon as it is unchecked. Choosing a file then clears the all-files result and shows that file unfiltered, like any file change; otherwise the result stays until the next submit.
 - Progress indicator "Searching file N of M…" during multi-file scans.
@@ -143,29 +153,34 @@ Requirement (client): `label1` is the primary search target; searching on a full
 > Type at least 2 characters and press Enter or click Search. Changed options take effect when you search again.
 >
 > **Domain** – type a domain name or part of one:
+>
 > - `svt` – domains whose name contains "svt" (e.g. svt.se, svtplay.se)
 > - `svt.se` – as above, but only under .se, including subdomains
-> - `www.svt.se` – subdomains of svt.se containing "www"
 >
-> The first part you type may be partial; the remaining parts must match exactly.
+> A leading “www.” is ignored: `www.svt.se` searches for `svt.se`.
+>
+> Includes string: the first part you type may be partial; the remaining parts must match exactly. Exact match: only the domain as typed, e.g. `svt.se` finds svt.se but not svtplay.se or api.svt.se, and `svt` finds svt.se and svt.com.
 >
 > **Columns** – finds rows where any of the selected columns contains the text. `label0` is the top-level domain (e.g. se), `label1` the name below it (e.g. svt), and so on.
 >
 > **Extended search** searches all files and adds a File column.
 
 **Implementation (two-step, fits D4 option A)**
+
 1. Scan only the label columns the search needs (Domain mode: `label0`…`labelN` from the query; Columns mode: the selected columns), row group by row group, via `parquetRead` with `onChunk` (`rowStart` gives original row numbers). Keep only matching row indexes; discard values.
 2. `filteredDataFrame(df, indexes)` maps view row `i` → source row `indexes[i]`; other columns stay lazily loaded. For Extended search, `concatDataFrame` stacks per-file filtered views and adds the `File` column. Wrap with `sortableDataFrame`.
 
 Not using hyparquet `filter` (see finding 8).
 
 **Known limits**
+
 - Only `label0`–`label4` hold strings in sample data → domains with > 5 labels cannot be fully matched.
 - "All domains under a TLD" (e.g. all `.se`) is not expressible in Domain mode (`se` without a dot searches `label1`); use Columns mode with `label0`.
 
 ### 4.3 D10 – accessibility
 
 Legal basis (EU):
+
 - The EU's legal accessibility requirements are underpinned by the harmonised standard **EN 301 549 v3.2.1** ([European Commission – Web accessibility](https://digital-strategy.ec.europa.eu/en/policies/web-accessibility)).
 - EN 301 549 v3.2.1 includes **WCAG 2.1 level AA** verbatim for web content ([W3C WAI – EU policies](https://www.w3.org/WAI/policies/european-union/)).
 - Web Accessibility Directive (EU) 2016/2102 applies to **public sector bodies** and additionally requires an **accessibility statement** and a **feedback mechanism**. The European Accessibility Act (EU) 2019/882 covers listed products/services, also in the private sector (same sources).
@@ -174,6 +189,7 @@ Legal basis (EU):
 Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), which covers the WCAG 2.1 AA criteria required by EN 301 549 plus the newer 2.2 criteria. Key requirements per area:
 
 **Table** – follow the WAI-ARIA APG data grid pattern ([APG Grid](https://www.w3.org/WAI/ARIA/apg/patterns/grid/)):
+
 - `role="grid"` with `aria-rowcount` / `aria-colcount` = full counts; each rendered row has `aria-rowindex` (virtualization hides rows from the DOM, so screen readers need the real position).
 - Sortable headers are buttons; the sorted header has `aria-sort="ascending"`.
 - One tab stop into the grid (roving `tabindex`); Arrow keys, Home/End, Ctrl+Home/End, PageUp/PageDown move focus; focused cell scrolls into view.
@@ -181,6 +197,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - Column resize handles are keyboard operable and labelled.
 
 **Search**
+
 - Visible `<label>` for the input; Extended search is a native checkbox with label.
 - Result count and progress announced via a `role="status"` live region ("12 results", "Searching file 3 of 5…").
 - Validation message linked with `aria-describedby`; `aria-invalid` on the input when too short.
@@ -188,6 +205,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - Disabled file selector uses the native `disabled` attribute.
 
 **Other UI**
+
 - Lens dropdown follows the APG menu button pattern (or uses a native `<select>`).
 - `ParquetGrid` / `ParquetLayout` information currently only in `title` tooltips must also be available to keyboard and screen-reader users.
 - Visible focus indicator everywhere; text contrast ≥ 4.5:1 (check grid/layout colours and dark header).
@@ -199,30 +217,31 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 
 ## 5. File mapping (React → Solid)
 
-| React | Solid | Notes |
-| --- | --- | --- |
-| `main.tsx` | `src/index.tsx` | `render(() => <App/>, #app)`; drop hyperparam CSS imports |
-| `App.tsx` | `src/App.tsx` | `createResource` for file list / selected dataset |
-| `Layout.tsx` | `src/Layout.tsx` | `onMount` for title; own `ErrorBar` |
-| `Page.tsx` | `src/Page.tsx` | `<Switch>/<Match>` for lens; `<For>` for options |
-| `ParquetMetadata.tsx` | `src/lenses/ParquetMetadata.tsx` | Uses own `Json` |
-| `ParquetLayout.tsx` | `src/lenses/ParquetLayout.tsx` | Logic → `src/lib/layout.ts` |
-| `ParquetGrid.tsx` | `src/lenses/ParquetGrid.tsx` | Stats → `src/lib/grid.ts` |
-| `hightable.HighTable` | `src/table/Table.tsx` | Virtualized, sortable |
-| `hyperparam.Dropdown` | `src/components/Dropdown.tsx` | |
-| `hyperparam.ErrorBar` | `src/components/ErrorBar.tsx` | |
-| `hyperparam.Json` | `src/components/Json.tsx` | BigInt-safe, collapsible |
-| `hyperparam.asyncBufferFrom` | `src/lib/source.ts` | `asyncBufferFromUrl` + `cachedAsyncBuffer` |
-| `hyperparam.parquetDataFrame` | `src/lib/parquetDataFrame.ts` | Implements `hightable/dataframe` `DataFrame` |
-| `formatFileSize` (in Page) | `src/lib/format.ts` | |
-| – (new) | `src/lib/search.ts` | Query parsing + label predicate (pure) |
-| – (new) | `src/lib/searchScan.ts` | Label-column scan → matching row indexes |
-| – (new) | `src/lib/filteredDataFrame.ts`, `src/lib/concatDataFrame.ts` | Filtered / multi-file `DataFrame` views |
-| – (new) | `src/search/SearchBar.tsx`, `src/search/SearchHelp.tsx` | Input, button, Extended search toggle, (i) popover |
+| React                         | Solid                                                        | Notes                                                     |
+| ----------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |
+| `main.tsx`                    | `src/index.tsx`                                              | `render(() => <App/>, #app)`; drop hyperparam CSS imports |
+| `App.tsx`                     | `src/App.tsx`                                                | `createResource` for file list / selected dataset         |
+| `Layout.tsx`                  | `src/Layout.tsx`                                             | `onMount` for title; own `ErrorBar`                       |
+| `Page.tsx`                    | `src/Page.tsx`                                               | `<Switch>/<Match>` for lens; `<For>` for options          |
+| `ParquetMetadata.tsx`         | `src/lenses/ParquetMetadata.tsx`                             | Uses own `Json`                                           |
+| `ParquetLayout.tsx`           | `src/lenses/ParquetLayout.tsx`                               | Logic → `src/lib/layout.ts`                               |
+| `ParquetGrid.tsx`             | `src/lenses/ParquetGrid.tsx`                                 | Stats → `src/lib/grid.ts`                                 |
+| `hightable.HighTable`         | `src/table/Table.tsx`                                        | Virtualized, sortable                                     |
+| `hyperparam.Dropdown`         | `src/components/Dropdown.tsx`                                |                                                           |
+| `hyperparam.ErrorBar`         | `src/components/ErrorBar.tsx`                                |                                                           |
+| `hyperparam.Json`             | `src/components/Json.tsx`                                    | BigInt-safe, collapsible                                  |
+| `hyperparam.asyncBufferFrom`  | `src/lib/dataset.ts` (`loadDataSet`)                         | `asyncBufferFromUrl` + `cachedAsyncBuffer`                |
+| `hyperparam.parquetDataFrame` | `src/lib/parquetDataFrame.ts`                                | Implements `hightable/dataframe` `DataFrame`              |
+| `formatFileSize` (in Page)    | `src/lib/format.ts`                                          |                                                           |
+| – (new)                       | `src/lib/search.ts`                                          | Query parsing + label predicate (pure)                    |
+| – (new)                       | `src/lib/searchScan.ts`                                      | Label-column scan → matching row indexes                  |
+| – (new)                       | `src/lib/filteredDataFrame.ts`, `src/lib/concatDataFrame.ts` | Filtered / multi-file `DataFrame` views                   |
+| – (new)                       | `src/search/SearchBar.tsx`, `src/search/SearchHelp.tsx`      | Input, button, Extended search toggle, (i) popover        |
 
 ## 6. Phases
 
 ### Phase 0 – Project setup
+
 - [x] Flatten `tapir-hyparquet-solid/tapir-hyparquet-solid/*` into `tapir-hyparquet-solid/`; remove the empty inner folder.
 - [x] `git init`; keep template `.gitignore`.
 - [x] `package.json`: name `tapir-hyparquet-solid`, `version` 0.1.0, `license: MIT`, `private: true`; scripts `dev`, `build` (`tsc && vite build`), `preview`, `lint`, `test`, `typecheck`.
@@ -239,21 +258,24 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Verify: `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build` pass; `pnpm dev` serves the placeholder `App`; no `react` in `dist/`.
 
 ### Phase 1 – Pure logic (no UI) + tests
+
 - [x] `src/lib/format.ts`: `formatFileSize`. Cell values use `stringify` from `hightable/dataframe` directly (handles BigInt, Date as ISO, nested objects), so no own wrapper.
 - [x] `src/lib/layout.ts`: `collectLayoutItems`, `getColumnRange`, `columnPages` (moved out of the `Column` component), `metadataRange`, layout item types.
 - [x] `src/lib/grid.ts`: `gridColumns` (names, totals, maxes, grid template), `rowGroupStats`, `rowGroupTitle`, `columnCell`, `columnLabelTitle`.
 - [x] Unit tests: synthetic metadata for exact values + invariants on the sample files (`test/samples.ts` loads their metadata).
 
 ### Phase 2 – Data layer
-- [x] `src/lib/source.ts` (`openParquetUrl`): file size from a 1-byte range request (`Range: bytes=0-0` → `Content-Range`), not HEAD – GitHub Pages returns the gzip-compressed size in HEAD `Content-Length` (verified with `curl` on a deployed SVG: 3954 vs. 9982 bytes). 206 → `asyncBufferFromUrl` + `cachedAsyncBuffer`; 200 (range ignored) → the probe response already holds the whole file. Range support verified on the Vite dev server (206 for parquet) and GitHub Pages (206 for SVG).
+
+- [x] `src/lib/source.ts` (`openParquetUrl`): file size from a 1-byte range request (`Range: bytes=0-0` → `Content-Range`), not HEAD – GitHub Pages returns the gzip-compressed size in HEAD `Content-Length` (verified with `curl` on a deployed SVG: 3954 vs. 9982 bytes). 206 → `asyncBufferFromUrl` + `cachedAsyncBuffer`; 200 (range ignored) → the probe response already holds the whole file. Range support verified on the Vite dev server (206 for parquet) and GitHub Pages (206 for SVG). **Superseded 2026-10-26:** `source.ts` removed; `loadDataSet` calls `asyncBufferFromUrl({ url })` (size from HEAD `Content-Length`, see section 7, D11).
 - [x] `src/lib/dataset.ts`: `listDataSets()` from `import.meta.glob(..., { query: '?url', import: 'default', eager: true })` (names + URLs, sorted, no download); `loadDataSet(entry)` → `{ name, url, byteLength, metadata, df }`.
 - [x] `src/lib/parquetDataFrame.ts`: `DataFrame` with `parquetRead` + `onChunk` per chunk of ≤ 1000 rows within row group boundaries (`planChunks`); `compressors` from `hyparquet-compressors`; per chunk+column read de-duplication; failed reads are retried on next fetch; `resolve` events; `AbortSignal` checked before/after (hyparquet reads cannot be cancelled mid-way).
 - [x] Wrap with `sortableDataFrame` from `hightable/dataframe` (in `loadDataSet`).
 - [x] Tests: `planChunks`; every cell equals `parquetReadObjects`; only requested columns decoded; no duplicate reads; abort; retry; sorting; `loadDataSet` against a fake static server with and without range support.
 - [ ] (Later, optional) move decoding to a Web Worker if large files block the main thread.
-- [x] After Phase 3 deploy: confirmed in the browser that a parquet file on GitHub Pages loads via range requests (`bytes=0-0` → 206, `Content-Range: …/16283`, then one range). Pages gzips `.parquet` (`application/octet-stream`) when gzip is accepted, and then even ranges refer to the compressed bytes; browsers avoid this because the Fetch standard adds `Accept-Encoding: identity` to requests with a `Range` header. A HEAD request has no `Range`, so its size would still be the compressed one – the reason for the probe in `source.ts`.
+- [x] After Phase 3 deploy: confirmed in the browser that a parquet file on GitHub Pages loads via range requests (`bytes=0-0` → 206, `Content-Range: …/16283`, then one range). Pages gzips `.parquet` (`application/octet-stream`) when gzip is accepted, and then even ranges refer to the compressed bytes; browsers avoid this because the Fetch standard adds `Accept-Encoding: identity` to requests with a `Range` header. A HEAD request has no `Range`, so its size would still be the compressed one – the reason for the probe in `source.ts` (removed 2026-10-26; files are no longer served from Pages, D11).
 
 ### Phase 3 – Shell components
+
 - [x] `ErrorBar`: always-present `role="alert"` region; close button; a new error object shows the bar again.
 - [x] `Dropdown`: APG menu button (`aria-haspopup`, `aria-expanded`, `aria-controls`; `menu`/`menuitem(radio)` with `aria-checked`; arrows/Home/End/Escape/Tab; focus returns to the button; outside click closes). Takes an `items` list instead of arbitrary children.
 - [x] `Json`: Solid port; toggles are `<button aria-expanded>` (disclosure pattern) instead of clickable `div role="treeitem"`, which had no keyboard support. Pure helpers in `src/lib/json.ts`.
@@ -266,6 +288,7 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Verified in the browser (dev + `vite preview`): file switching, menu by mouse and keyboard, metadata tree, range requests (`bytes=0-0` → 206, then one range for small files).
 
 ### Phase 4 – Static lenses
+
 - [x] `ParquetMetadata` (via `Json`) – done in phase 3 to exercise `Json` in the browser; uses `<div>` instead of the original `<code>`, which cannot contain block elements.
 - [x] `ParquetLayout`: `Group`/`Cell`/`Column` with `<For>`/`<Show>`/`<Switch>` on top of `src/lib/layout.ts`. Names are `<span>` instead of `<label>` (no form controls); groups are `role="group"` labelled by their name.
 - [x] `ParquetGrid`: same bars and `title` tooltips on top of `src/lib/grid.ts`. Tooltips are mouse-only, so the visual grid is `aria-hidden` and a `<details>` "Show as table" offers the numbers as a data table (caption, column/row headers, totals) for keyboard and screen-reader users (4.3).
@@ -273,7 +296,9 @@ Target: build to **WCAG 2.2 level AA** ([W3C](https://www.w3.org/TR/WCAG22/)), w
 - [x] Component tests: layout structure and group names; grid `aria-hidden` + table headers/values/totals.
 
 ### Phase 5 – Table
+
 Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_modules/hightable/dist/HighTable.js.map` and checked in the running React app):
+
 - [x] Virtualized rows: `src/lib/viewport.ts` (fixed 33px rows, 20 rows overscan, canvas capped at 8M px with proportional scroll); `df.fetch` for the rendered range, aborted when the range, columns or sort change; re-render on `resolve`/`update` events.
 - [x] Per-cell loading placeholder (shimmer, disabled with `prefers-reduced-motion`) plus visually hidden "Loading" text and `aria-busy`.
 - [x] Sticky header, corner and row-number column; 1-based original row numbers.
@@ -294,6 +319,7 @@ Feature parity with HighTable 0.26.4 (behaviour read from its sources in `node_m
 - Fixed-width dot on headers (4×4 px, `#9d9cd5`, ≈ 2.3:1 on `#f0f0f0`): client decision 2026-10-16 – not information needed to use the table, so WCAG 1.4.11 does not apply. Kept as in HighTable.
 
 Deviations from HighTable (accessibility):
+
 - No automatic focus on mount: HighTable focuses the first cell when the table appears, which moves focus away from the file `<select>` on change (WCAG 3.2.2).
 - Data cells are `role="gridcell"` (HighTable: `cell`, invalid inside `grid`); `aria-sort` only on the primary sort column.
 - Resize handle is pointer-only and hidden from assistive technology (`aria-hidden`, not focusable); keyboard, screen-reader and single-pointer users resize from the column menu (HighTable: focusable `spinbutton`). Decided 2026-10-19 (header option 2) after VoiceOver read every header as "name, Column menu for name, N pixels, Resize column name".
@@ -302,6 +328,7 @@ Deviations from HighTable (accessibility):
 - Column menu has no sort item; sorting is done on the header only.
 
 ### Phase 6 – Search (D8)
+
 - [x] `src/lib/search.ts`: normalise + parse query → predicate (`columns` it reads + `matches(row)`) for Domain and Columns mode, validation messages, `sameOptions`. Tests: every row of the 4.2 table, Columns mode (OR, substring), trailing dot, uppercase, empty, too short, empty parts, > 10 parts, labels missing in data, no column selected.
 - [x] `src/lib/searchScan.ts`: `scanRows` reads only the needed label columns, one row group at a time (abort checked between row groups); `searchDataSet`, `searchAll` (progress callback). Tests vs. a brute-force filter of all rows on every sample file.
 - [x] `src/lib/filteredDataFrame.ts` (fetches source rows in consecutive runs) + tests.
@@ -310,18 +337,22 @@ Deviations from HighTable (accessibility):
 - [x] `SearchHelp`: (i) button (name "Help", 28×28 px) + modal dialog with the 4.2 help text.
 - [x] Wire into `Page`/`App`: last submitted search in `App`, `createResource` for results, previous search aborted on submit/file change, file selector disabled while the Extended search checkbox is checked, view header shows "N of M rows" / "N rows from F files".
 - [ ] Review the help text together with the client once search works; update 4.2 and `SearchHelp`.
+- [x] Domain match choice (Include subdomains / Exact match) and leading `www.` ignored (2026-10-23): `search.ts` (`match` option, `sameOptions`), `SearchBar` Match radio group (both modes), `SearchHelp`, tests.
 - [ ] Review with the client: in Extended search the Metadata/Layout/Grid lenses still show the selected file (the disabled file selector shows which).
 
 Findings:
+
 - Checked in the browser on the sample files: `office` → 2 of 66 rows; `microsoft.com` → 4 rows (incl. `microsoftonline`, substring on label1); Columns `label0` + `se` → 1 row; Extended → 1 row in 5 files with File column, file selector disabled. All search controls pass WCAG 2.5.8 (radios/checkboxes 13 px pass by spacing).
 
 ### Phase 7 – CI / deploy
+
 - [x] Port `.github/workflows/deploy.yaml` from the original; only change: pnpm (`npm install -g pnpm@11.25.0`, `pnpm install --frozen-lockfile`, `pnpm run build`); Node 24.
 - [x] Enable GitHub Pages in the repo (Settings → Pages → Source: GitHub Actions).
 - [x] Add lint + test steps before build.
 - [x] After build: fail if `dist/` contains React (grep for React's JSX-runtime marker `react.element` / `react.transitional.element`).
 
 ### Phase 8 – Verification & cleanup
+
 - [x] Side-by-side check against the React app for every lens and every sample file (2026-10-19): view header, first 12 table rows, Metadata text, Layout text and Grid tooltips identical for all 5 files. One difference found and fixed: collapsed JSON previews showed fewer entries, because the toggle button sized to its content while the preview sizes itself to the button (`.json-toggle` now `width: 100%`). (The React app's dev server logs "Do not know how to serialize a BigInt" from React's dev profiler and sometimes ignores file changes; not our code.)
 - [x] Large file (`pnpm generate:large`, 200,000 rows, 4 row groups of 50,000, 149 kB; dev server, Chrome): first rows 0.6 s after selecting the file; 32 rows in the DOM; scroll to middle 1.1 s and to the end 0.4 s until all cells loaded; first sort on `label1` 2.0 s (whole column read); JS heap 275 MB after scroll + sort.
 - [x] Search on the large file: `office` → 8,724 rows in 49 ms. Extended search over all 6 files: 1.5 s with "Searching file N of 6…" progress. Two quick submits: the first is aborted, only the second result is shown, no error.
@@ -356,64 +387,86 @@ Findings:
   - Sorting added to the column menu (Sort ascending / Sort descending / Remove sort), because VO+arrows land on the menu button and never on the header cell; plain arrows + Enter on the header still sort.
   - The sort hint (`aria-describedby`) and the header tooltips (`title`, which screen readers also read as a description) were removed; how to sort is explained in the help dialog.
   - Help text read with VO+arrows only: expected VoiceOver behaviour (Tab reaches controls, VO+arrows read text); left as is.
+- [x] Markup review after the Biome switch (D12, 2026-10-26), checked against ARIA in HTML and APG:
+  - Table: removed `role="gridcell"` / `columnheader` / `rowheader` on `td`/`th` (implicit inside `<table role="grid">`, explicit is NOT RECOMMENDED) and `aria-readonly` (APG: grids without editing omit it). CSS uses `th[scope="row"]`.
+  - Layout view and Grid table wrapper: `<div role="region">` → `<section>` with a name (same region landmark, native element); `tabindex="0"` kept (WCAG 2.1.1).
+  - Search: `<form role="search">` → `<search aria-label="Search"><form>` (MDN: Baseline, Chrome/Firefox 118, Safari 17).
+  - Help dialog: explicit Escape handler (native Esc already closed it).
+  - Tests query `td` and `<search>` directly: Testing Library's aria-query 5.3.0 lacks these implicit roles.
+- [ ] VoiceOver re-check after the markup review: table (cells, headers, row numbers), search landmark (VO+U), Layout and Grid views.
 - [x] Update `README.md` (pnpm commands, Solid, features, data, deployment).
 - ResizeObserver "loop completed with undelivered notifications" (seen once on 2026-10-16) was not reproduced on 2026-10-19 while switching lenses and resizing. Per [MDN](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#observation_errors) it means a resize was deferred to the next frame; it is harmless unless it repeats. Likely source: the JSON preview feedback loop fixed above.
 
 #### Manual checklist (keyboard + VoiceOver, Safari on macOS)
+
 Turn on VoiceOver with Cmd+F5. VO = Ctrl+Option. Use Tab/Shift+Tab for keyboard-only, VO+arrows to read.
+
 1. **Start**: page title "DNS Tapir hyparquet" is read; VO+U (rotor) lists the heading "DNS Tapir", the landmarks main and search.
 
 2. **File selector**: Tab reaches "Choose file, pop-up button" (now below the dark header, above the search); changing file does not move focus; the table shows the new file.
 
 3. **Search form**: Tab order is search field → Search → Help → Domain/Columns → (label0–label9 in Columns mode) → Extended search. Each is read with its label.
--  OK
+
+- OK
 
 4. **Validation**: type `a`, Enter → "Enter at least 2 characters." is announced; the field is read as invalid.
+
 - OK
 
 5. **Columns**: choose Columns → the label0–label9 checkboxes appear in a group "Columns"; uncheck label1 → "Choose at least one column to search." is announced.
+
 - OK
 
 6. **Options changed**: tick Extended search → the file selector becomes dimmed/unavailable; "Options changed – press Search to update." appears below the options; on the Search button VoiceOver reads it.
+
 - OK
 
 7. **Result**: search `office` → "2 matching rows" (or similar) is announced without moving focus.
-OK
+   OK
 
 8. **Help**: activate "Help" → a dialog "Help" opens with focus on Close; Tab stays inside the dialog; the text (incl. the Table section on sorting) can be read with VO+arrows; Esc or Close closes it and focus returns to the Help button.
+
 - fokus på Help rubrik
 - för att få texten uppläst fungerar enbart ctrl+option+pil. inte bara pil eller bara tab. med tab hamnar fokus på close ( vilket är logiskt om pilarna hade fungerat)
 
 9. **Table, entering**: Tab from the View button goes straight to a cell (first time: "Row number"); VoiceOver reads "Table" (not the file name); arrows move cell by cell; a header is read once, e.g. "label0, Column menu", without an extra hint; rows are read as "Row N", not their whole content. Tab from a cell leaves the table (grids use arrows inside, Tab to move on).
+
 - ctrl +option + pil ger fokus på column menu, kommer inte åt sortering
 - pilr ger fokus på rubrik och sortering, kommer inte åt column menu
 
-
 10. **Table, keys**: Home/End, Ctrl+Home/End, PageUp/PageDown move as expected; the focused cell is always visible, also after moving with VO+arrows.
+
 - OK
 
 11. **Sorting**: Enter (or VO+Space) on a header sorts; with VO+arrows use Column menu → Sort ascending / Sort descending / Remove sort (the current choice is read as checked); VoiceOver announces "Sorted by label1, ascending"; Enter on "Row number" announces "Sorted by row number (file order)".
+
 - OK
 
 12. **Column menu**: from a focused header, Tab to "Column menu", Enter opens it; arrows move between items; Esc closes it and returns focus.
+
 - OK
 
 13. **Resize**: in the column menu, Wider / Narrower change the width by 50 px, Fit to content restores the automatic width; focus returns to the menu button. With the mouse, dragging the header edge still works.
+
 - OK
 
 14. **Lenses**: the "View: …" button opens the lens menu; Metadata: JSON toggles are read as buttons with expanded/collapsed; Layout and Grid: the scroll areas can be focused and scrolled with arrows; Grid: "Show as table" opens a table with caption and headers.
+
 - OK
 
 15. **Zoom**: at 200 % browser zoom (Cmd+plus) nothing overlaps and no text is cut off (WCAG 1.4.4); at 400 % / 320 px wide the content reflows and the page scrolls (1.4.10) – note what does not.
+
 - OK
 
 16. **Focus visibility**: on every step above the focused element has a clearly visible outline.
-Note failures with step number, browser and what VoiceOver said.
+    Note failures with step number, browser and what VoiceOver said.
+
 - OK
 
-
 ### Open decisions – after Phase 8
+
 Need a decision from the client; implement together with any changes that come out of Phase 8.
+
 - [x] **WCAG 2.5.7 Dragging Movements** – decided 2026-10-19: column menu items Wider / Narrower (±50 px) and Fit to content; the drag handle is pointer-only.
 - [ ] **Search time span** (requested 2026-10-19, deferred until the shape of real files is known). Facts from the sample files: `start_time` is `TIMESTAMP_MICROS`, `isAdjustedToUTC: true`, and **each file holds a single value** (e.g. `2026-04-15T09:19:00.851Z`), so a span would select whole files. To decide: do real files hold several `start_time` values; input in UTC or local time; inclusive bounds and optional start/end; may a span alone (no query) be searched, which would change the 2-character rule. Row group min/max statistics can skip files/row groups outside the span without reading them.
 - [ ] **Secondary sort keys** (found in Phase 8; client decision 2026-10-19: leave as is for now – the secondary order is not clear visually either, so it is a general design question rather than a screen-reader one. Known possible non-conformance; revisit together with the other open decisions): with a multi-column sort, the 2nd, 3rd … sort columns show their arrow in `#bbb` (≈ 1.7:1 on `#f0f0f0`) and differ from the primary column only by colour; screen readers get `aria-sort` on the primary column only, so the secondary order is not exposed at all. Possible conflicts: WCAG 1.4.1 Use of Color, 1.4.11 Non-text Contrast, 1.3.1 Info and Relationships. Options: (a) show the sort position (1, 2, …) next to the arrow with ≥ 3:1 contrast and add it to the header's description (e.g. "sorted 2nd, ascending"); (b) darker arrows for all sorted columns plus (a); (c) leave as is (HighTable behaviour). The unsorted ⇅ marks are decorative and can stay light.
@@ -423,6 +476,6 @@ Need a decision from the client; implement together with any changes that come o
 - Range requests: verified on the Vite dev server and GitHub Pages (SVG). Parquet on Pages to be confirmed after the Phase 3 deploy; fallback (whole file) exists.
 - Cell cache in `parquetDataFrame` is never evicted (same as the original); scrolling through a very large file eventually holds all fetched cells in memory.
 - `sortableDataFrame` sorts by fetching whole columns; on very large files the first sort is expensive – acceptable or needs worker?
-- D11: final production data source (bundled vs. external URL) – deferred; an external URL also needs CORS + range-request support on that server, and must expose `Content-Range` (`Access-Control-Expose-Headers`) for the size probe in `source.ts`.
+- D11 decided 2026-10-26 (external URL). The server (S3 + CloudFront) sends `Access-Control-Allow-Origin: *` and supports ranges, but does not expose `Content-Range` (not CORS-safelisted), so the former range probe in `source.ts` failed (`missing Content-Range`). Chosen: file size from HEAD `Content-Length` via `asyncBufferFromUrl({ url })` in `loadDataSet`; `source.ts` removed. CloudFront does not compress parquet (verified with `curl`). Risk: if the server starts compressing parquet, HEAD returns the compressed size and hyparquet fails with `footer != PAR1`.
 - Not planned (not used by the current app): HighTable cell double-click handler. Add only on request.
 - TypeScript is held at 6.x: `typescript-eslint` 8.71.2 requires `typescript <6.1.0` (npm registry). Revisit when typescript-eslint supports TS 7.
