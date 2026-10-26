@@ -36,7 +36,7 @@ pnpm typecheck   # tsc --noEmit
 pnpm generate:large [rows]  # gitignored large test file in src/parquets/ (excluded from tests)
 ```
 
-Run `pnpm format`, `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done. CI runs `biome ci` (lint + format check) on every push and fails on unformatted code.
+Run `pnpm format`, `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done. CI (`check.yaml`) runs `biome ci` (lint + format check), typecheck and tests on every push and on pull requests to `main`, and fails on unformatted code.
 
 ## Hard rules
 

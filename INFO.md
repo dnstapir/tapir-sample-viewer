@@ -38,7 +38,7 @@ The app loads the file list (`index.json`) and the parquet files from `https://p
 ## Deployment
 
 Before you push - run `pnpm format` to format nes code and `pnpm lint` to check that lint-rules are applied. if neccesary run `pnpm lin:fix`to fix lint problems.
-Every push runs `.github/workflows/check.yaml` (`biome ci`: lint + format check). Pushing to `main` also runs `.github/workflows/deploy.yaml`: install, `biome ci`, test, build, check that `dist/` contains no React, and deploy `dist/` to GitHub Pages. The build uses relative paths (`base: './'`), so it works from any sub-path or static host.
+Every push and every pull request to `main` runs `.github/workflows/check.yaml`: `biome ci` (lint + format check), typecheck and tests. The check is not required for merging; workflow runs from forks need maintainer approval. Pushing to `main` also runs `.github/workflows/deploy.yaml`: install, `biome ci`, test, build, check that `dist/` contains no React, and deploy `dist/` to GitHub Pages. The build uses relative paths (`base: './'`), so it works from any sub-path or static host.
 
 ## Project docs
 
