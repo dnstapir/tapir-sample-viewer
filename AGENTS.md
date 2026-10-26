@@ -29,13 +29,14 @@ pnpm install
 pnpm dev         # Vite dev server
 pnpm build       # typecheck + production build to dist/
 pnpm preview     # serve dist/
-pnpm lint        # eslint
+pnpm lint        # biome lint
+pnpm format      # biome: format + organize imports (writes files)
 pnpm test        # vitest run
 pnpm typecheck   # tsc --noEmit
 pnpm generate:large [rows]  # gitignored large test file in src/parquets/ (excluded from tests)
 ```
 
-Run `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done.
+Run `pnpm format`, `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done. CI (`check.yaml`) runs `biome ci` (lint + format check), typecheck and tests on every push and on pull requests to `main`, and fails on unformatted code.
 
 ## Hard rules
 
@@ -44,10 +45,10 @@ Run `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done
 - **`hightable` only via `hightable/dataframe`.** Never import from `'hightable'` (root), which contains the React components.
 - **Dependency versions**: caret ranges in `package.json`; always commit `pnpm-lock.yaml`.
 - **Keep `autoInstallPeers: false`** in `pnpm-workspace.yaml`; otherwise pnpm installs `hightable`'s React peers.
-- **TypeScript stays on 6.x** until `typescript-eslint` supports 7.
+- **TypeScript 7** upgrade is a separate step after the Biome switch (PLAN.md D13).
 - **All UI text in English.**
 - **Accessibility is a legal requirement** (EU: EN 301 549 / WCAG 2.1 AA; build to WCAG 2.2 AA). Follow PLAN.md section 4.3 for every component.
-- **All parquet file access goes through `src/lib/dataset.ts` / `src/lib/source.ts`** (data source may move from bundled files to an external URL).
+- **All parquet file access goes through `src/lib/dataset.ts`** (`index.json` and files from `https://public.test.dnstapir.se/parquet-samples/`, PLAN.md D11).
 
 ## Architecture (target)
 
@@ -61,9 +62,9 @@ src/
   lenses/              # ParquetMetadata, ParquetLayout, ParquetGrid
   table/               # virtualized sortable data grid (own windowing, see src/lib/viewport.ts)
   search/              # SearchBar, SearchHelp
-  lib/                 # pure TS: format, layout, grid, source, dataset, parquetDataFrame,
+  lib/                 # pure TS: format, layout, grid, dataset, parquetDataFrame,
                        #          search, searchScan, filteredDataFrame, concatDataFrame, abort
-  parquets/            # bundled sample .parquet files
+  parquets/            # sample .parquet files for tests (the app loads files from the server)
 public/                # TAPIR logos
 test/                  # vitest
 ```
@@ -91,13 +92,13 @@ test/                  # vitest
 
 ## Code style
 
-Match the original ESLint config (ported to `eslint.config.js`):
+Biome (`biome.json`, PLAN.md D12) lints and formats `.ts`, `.tsx`, `.js`, `.json` and `.css`; Markdown, YAML and `public/` are excluded.
 
-- TypeScript strict; typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`.
-- 2-space indent, single quotes, **no semicolons**, trailing commas on multiline, newline at EOF, no trailing spaces, max 1 empty line.
-- `func-style: declaration` – use `function` declarations for top-level functions and components. Arrow functions are allowed for Solid derived signals (`const visible = () => …`).
-- Refs: use callback refs (`ref={el => { button = el }}`); ESLint's `no-unassigned-vars` does not understand `ref={button}`.
-- `object-curly-spacing: always`, `eqeqeq`, `prefer-const`, sorted import members.
+- Formatting is Biome's job: 2-space indent, line width 120, single quotes (double in JSX), **no semicolons**, trailing commas, arrow parentheses only when needed. Run `pnpm format`; do not hand-format.
+- Linting: Biome `recommended` preset plus the Solid domain (`noSolidDestructuredProps`, `useSolidForComponent`).
+- TypeScript strict (`tsconfig.json`).
+- Use `function` declarations for top-level functions and components. Arrow functions are allowed for Solid derived signals (`const visible = () => …`).
+- Refs: use callback refs (`ref={el => { button = el }}`).
 - Comments only where code cannot explain itself; one short line.
 
 ## Testing

@@ -24,8 +24,11 @@ export function loadWidths(storage: Pick<Storage, 'getItem'>, key: string): Widt
     return {}
   }
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return {}
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, number] =>
-    isValidWidth(entry[1]) && entry[1] >= minColumnWidth))
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, number] => isValidWidth(entry[1]) && entry[1] >= minColumnWidth,
+    ),
+  )
 }
 
 export function saveWidths(storage: Pick<Storage, 'setItem' | 'removeItem'>, key: string, widths: Widths): void {
@@ -51,7 +54,7 @@ export function adjustWidths({ columns, fixed, measured, maxTotalWidth }: Adjust
 
   const adjusted: Widths = {}
 
-  const groupsByWidth = new Map<number, { name: string, minWidth: number }[]>()
+  const groupsByWidth = new Map<number, { name: string; minWidth: number }[]>()
   for (const name of measuredColumns) {
     const width = measured[name]
     if (width === undefined) continue

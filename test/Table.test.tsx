@@ -16,7 +16,7 @@ describe('Table', () => {
   let df: DataFrame
 
   beforeAll(async () => {
-    [sample] = await loadSamples()
+    ;[sample] = await loadSamples()
     expected = await parquetReadObjects({ file: await openFile(sample.path), metadata: sample.metadata })
   })
   beforeEach(async () => {
@@ -36,7 +36,8 @@ describe('Table', () => {
 
   async function loaded(grid: HTMLElement) {
     await waitFor(() => {
-      expect(within(grid).getAllByRole('gridcell').length).toBeGreaterThan(0)
+      // aria-query 5.3.0 maps td to cell, not to gridcell inside role=grid as browsers do
+      expect(grid.querySelectorAll('td').length).toBeGreaterThan(0)
       expect(grid.querySelector('td[aria-busy="true"]')).toBeNull()
     })
   }
@@ -69,11 +70,15 @@ describe('Table', () => {
     const values = expected.map(row => String(row.label1)).sort()
 
     fireEvent.click(header)
-    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(values[0]) })
+    await waitFor(() => {
+      expect(firstRowValue(grid, 'label1')).toBe(values[0])
+    })
     expect(header.getAttribute('aria-sort')).toBe('ascending')
 
     fireEvent.click(header)
-    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(values[values.length - 1]) })
+    await waitFor(() => {
+      expect(firstRowValue(grid, 'label1')).toBe(values[values.length - 1])
+    })
     expect(header.getAttribute('aria-sort')).toBe('descending')
 
     fireEvent.click(header)
@@ -102,14 +107,20 @@ describe('Table', () => {
     await loaded(grid)
     const header = within(grid).getByRole('columnheader', { name: 'label1' })
     const values = expected.map(row => String(row.label1)).sort()
-    const checked = () => screen.getAllByRole('menuitemradio').filter(item => item.getAttribute('aria-checked') === 'true').map(item => item.textContent)
+    const checked = () =>
+      screen
+        .getAllByRole('menuitemradio')
+        .filter(item => item.getAttribute('aria-checked') === 'true')
+        .map(item => item.textContent)
 
     fireEvent.click(columnMenu(grid, 'label1'))
     expect(checked()).toEqual(['Remove sort'])
     fireEvent.click(screen.getByRole('menuitemradio', { name: 'Sort descending' }))
     expect(header.getAttribute('aria-sort')).toBe('descending')
     expect(screen.getByRole('status').textContent).toBe('Sorted by label1, descending')
-    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(values[values.length - 1]) })
+    await waitFor(() => {
+      expect(firstRowValue(grid, 'label1')).toBe(values[values.length - 1])
+    })
 
     fireEvent.click(columnMenu(grid, 'label1'))
     expect(checked()).toEqual(['Sort descending'])
@@ -127,13 +138,17 @@ describe('Table', () => {
 
     fireEvent.click(within(grid).getByRole('columnheader', { name: 'label0' }))
     fireEvent.click(label1)
-    await waitFor(() => { expect(firstRowValue(grid, 'label1')).toBe(expected.map(row => String(row.label1)).sort()[0]) })
+    await waitFor(() => {
+      expect(firstRowValue(grid, 'label1')).toBe(expected.map(row => String(row.label1)).sort()[0])
+    })
     expect(corner.getAttribute('aria-sort')).toBe('none')
 
     fireEvent.click(corner)
     expect(corner.getAttribute('aria-sort')).toBe('ascending')
     expect(label1.getAttribute('aria-sort')).toBe('none')
-    await waitFor(() => { expect(within(grid).getAllByRole('rowheader')[0].textContent).toBe('1') })
+    await waitFor(() => {
+      expect(within(grid).getAllByRole('rowheader')[0].textContent).toBe('1')
+    })
     expect(firstRowValue(grid, 'label1')).toBe(stringify(expected[0].label1))
 
     fireEvent.click(label1)
@@ -152,10 +167,10 @@ describe('Table', () => {
     fireEvent.keyDown(document.activeElement ?? grid, { key: 'ArrowRight' })
     fireEvent.keyDown(document.activeElement ?? grid, { key: 'ArrowDown' })
     const active = document.activeElement
-    expect(active?.getAttribute('role')).toBe('gridcell')
+    expect(active?.tagName).toBe('TD')
     expect(active?.getAttribute('aria-colindex')).toBe('2')
     expect(active?.parentElement?.getAttribute('aria-rowindex')).toBe('2')
-    expect(grid.querySelectorAll('[role=gridcell][tabindex="0"], [role=columnheader][tabindex="0"]')).toHaveLength(1)
+    expect(grid.querySelectorAll('td[tabindex="0"], th[scope=col][tabindex="0"]')).toHaveLength(1)
   })
 
   it('continues from a cell focused by other means, e.g. a screen reader', async () => {
@@ -180,7 +195,12 @@ describe('Table', () => {
     const { grid } = renderTable()
     await loaded(grid)
     fireEvent.click(columnMenu(grid, 'label1'))
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Wider', 'Narrower', 'Fit to content', 'Hide column'])
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Wider',
+      'Narrower',
+      'Fit to content',
+      'Hide column',
+    ])
     fireEvent.click(screen.getByRole('menuitem', { name: 'Hide column' }))
     expect(within(grid).queryByRole('columnheader', { name: 'label1' })).toBeNull()
 
@@ -221,6 +241,8 @@ describe('Table', () => {
     const failing: DataFrame = { ...df, fetch: () => Promise.reject(new Error('boom')) }
     df = failing
     const { onError } = renderTable()
-    await waitFor(() => { expect(onError).toHaveBeenCalledWith(new Error('boom')) })
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(new Error('boom'))
+    })
   })
 })

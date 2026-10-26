@@ -22,7 +22,14 @@ describe('parseSearch – Domain mode (PLAN.md 4.2 table)', () => {
   const names = ['svt.se', 'svtplay.se', 'www.svt.se', 'a.www.svt.se', 'api.svt.se', 'svt.com', 'svt.example.com']
 
   it('svt: label1 contains "svt"', () => {
-    expect(matching('svt', names)).toEqual(['svt.se', 'svtplay.se', 'www.svt.se', 'a.www.svt.se', 'api.svt.se', 'svt.com'])
+    expect(matching('svt', names)).toEqual([
+      'svt.se',
+      'svtplay.se',
+      'www.svt.se',
+      'a.www.svt.se',
+      'api.svt.se',
+      'svt.com',
+    ])
     expect(predicate('svt').columns).toEqual(['label1'])
   })
 
@@ -31,8 +38,15 @@ describe('parseSearch – Domain mode (PLAN.md 4.2 table)', () => {
     expect(predicate('svt.se').columns).toEqual(['label0', 'label1'])
   })
 
-  it('www.svt.se: label0 = se, label1 = svt, label2 contains "www"', () => {
-    expect(matching('www.svt.se', names)).toEqual(['www.svt.se', 'a.www.svt.se'])
+  it('www.svt.se: a leading www. is ignored', () => {
+    expect(matching('www.svt.se', names)).toEqual(matching('svt.se', names))
+    expect(predicate('www.svt.se').columns).toEqual(['label0', 'label1'])
+  })
+
+  it('removes www. only at the start', () => {
+    expect(matching('a.www.svt.se', names)).toEqual(['a.www.svt.se'])
+    expect(predicate('www').columns).toEqual(['label1'])
+    expect(predicate('www.').columns).toEqual(['label1'])
   })
 
   it('matches only the leftmost typed label as a substring', () => {
@@ -41,35 +55,87 @@ describe('parseSearch – Domain mode (PLAN.md 4.2 table)', () => {
   })
 })
 
+describe('parseSearch – Domain mode, exact match', () => {
+  const exact: Partial<SearchOptions> = { match: 'exact' }
+  const names = [
+    'svt.se',
+    'svtplay.se',
+    'api.svt.se',
+    'a.api.svt.se',
+    'svt.com',
+    'google.com',
+    'mygoogle.com',
+    'mail.google.com',
+  ]
+
+  it('google.com and www.google.com: only google.com', () => {
+    expect(matching('google.com', names, exact)).toEqual(['google.com'])
+    expect(matching('www.google.com', names, exact)).toEqual(['google.com'])
+    expect(predicate('google.com', exact).columns).toEqual(['label0', 'label1', 'label2'])
+  })
+
+  it('api.svt.se: only that subdomain', () => {
+    expect(matching('api.svt.se', names, exact)).toEqual(['api.svt.se'])
+  })
+
+  it('a query without a dot: label1 equals the query and label2 is empty', () => {
+    expect(matching('svt', names, exact)).toEqual(['svt.se', 'svt.com'])
+    expect(predicate('svt', exact).columns).toEqual(['label1', 'label2'])
+  })
+
+  it('adds no extra condition for 10 parts', () => {
+    const ten = Array.from({ length: 10 }, (_, i) => `l${i}`).join('.')
+    expect(predicate(ten, exact).columns).toHaveLength(10)
+  })
+})
+
 describe('parseSearch – normalisation and validation', () => {
   it('ignores case, surrounding spaces and one trailing dot', () => {
-    expect(matching('  WWW.SVT.SE. ', ['www.svt.se'])).toEqual(['www.svt.se'])
+    expect(matching('  WWW.SVT.SE. ', ['svt.se'])).toEqual(['svt.se'])
     expect(matching('svt', ['SVT.se'])).toEqual(['SVT.se'])
   })
 
   it('treats an empty query as no search, except when searching all files', () => {
     expect(parseSearch('  ', defaultSearchOptions)).toEqual({ kind: 'none' })
-    expect(parseSearch('', { ...defaultSearchOptions, extended: true }))
-      .toEqual({ kind: 'invalid', field: 'query', message: messages.tooShortExtended })
+    expect(parseSearch('', { ...defaultSearchOptions, extended: true })).toEqual({
+      kind: 'invalid',
+      field: 'query',
+      message: messages.tooShortExtended,
+    })
   })
 
   it('requires at least 2 characters after normalisation', () => {
-    expect(parseSearch('a', defaultSearchOptions)).toEqual({ kind: 'invalid', field: 'query', message: messages.tooShort })
-    expect(parseSearch('a.', defaultSearchOptions)).toEqual({ kind: 'invalid', field: 'query', message: messages.tooShort })
+    expect(parseSearch('a', defaultSearchOptions)).toEqual({
+      kind: 'invalid',
+      field: 'query',
+      message: messages.tooShort,
+    })
+    expect(parseSearch('a.', defaultSearchOptions)).toEqual({
+      kind: 'invalid',
+      field: 'query',
+      message: messages.tooShort,
+    })
     expect(parseSearch('ab', defaultSearchOptions).kind).toBe('search')
   })
 
   it('rejects empty domain parts', () => {
     for (const query of ['.se', 'www..se']) {
-      expect(parseSearch(query, defaultSearchOptions)).toEqual({ kind: 'invalid', field: 'query', message: messages.emptyLabel })
+      expect(parseSearch(query, defaultSearchOptions)).toEqual({
+        kind: 'invalid',
+        field: 'query',
+        message: messages.emptyLabel,
+      })
     }
   })
 
   it('accepts up to 10 domain parts and rejects more', () => {
     const ten = Array.from({ length: 10 }, (_, i) => `l${i}`).join('.')
     expect(predicate(ten).columns).toHaveLength(10)
-    expect(parseSearch(`x.${ten}`, defaultSearchOptions))
-      .toEqual({ kind: 'invalid', field: 'query', message: messages.tooManyLabels })
+    expect(parseSearch(`x.${ten}`, defaultSearchOptions)).toEqual({
+      kind: 'invalid',
+      field: 'query',
+      message: messages.tooManyLabels,
+    })
   })
 
   it('does not match labels that are missing in the data (> 5 labels in the samples)', () => {
@@ -85,16 +151,31 @@ describe('parseSearch – Columns mode', () => {
     const names = ['svt.se', 'example.com', 'svt.example.com', 'sex.example']
     expect(matching('se', names, columns(['label0']))).toEqual(['svt.se'])
     expect(matching('sv', names, columns(['label1', 'label2']))).toEqual(['svt.se', 'svt.example.com'])
-    expect(matching('ex', names, columns(['label0', 'label1']))).toEqual(['example.com', 'svt.example.com', 'sex.example'])
+    expect(matching('ex', names, columns(['label0', 'label1']))).toEqual([
+      'example.com',
+      'svt.example.com',
+      'sex.example',
+    ])
   })
 
   it('keeps dots as part of the text', () => {
     expect(matching('svt.', ['svt.se'], columns(['label1']))).toEqual([])
   })
 
+  it('exact match: a selected column equals the query, ignoring case', () => {
+    const names = ['svt.se', 'svtplay.se', 'SVT.com', 'svt.example.com']
+    const exact = (list: string[]): Partial<SearchOptions> => ({ ...columns(list), match: 'exact' })
+    expect(matching('svt', names, exact(['label1']))).toEqual(['svt.se', 'SVT.com'])
+    expect(matching('svt', names, exact(['label1', 'label2']))).toEqual(['svt.se', 'SVT.com', 'svt.example.com'])
+    expect(matching('sv', names, exact(['label1']))).toEqual([])
+  })
+
   it('requires at least one column', () => {
-    expect(parseSearch('svt', { ...defaultSearchOptions, mode: 'columns', columns: [] }))
-      .toEqual({ kind: 'invalid', field: 'columns', message: messages.noColumns })
+    expect(parseSearch('svt', { ...defaultSearchOptions, mode: 'columns', columns: [] })).toEqual({
+      kind: 'invalid',
+      field: 'columns',
+      message: messages.noColumns,
+    })
   })
 })
 
@@ -102,8 +183,13 @@ describe('sameOptions', () => {
   it('ignores the column choice in Domain mode', () => {
     expect(sameOptions(defaultSearchOptions, { ...defaultSearchOptions, columns: ['label0'] })).toBe(true)
   })
+  it('compares the match choice in both modes', () => {
+    expect(sameOptions(defaultSearchOptions, { ...defaultSearchOptions, match: 'exact' })).toBe(false)
+    const columns: SearchOptions = { ...defaultSearchOptions, mode: 'columns' }
+    expect(sameOptions(columns, { ...columns, match: 'exact' })).toBe(false)
+  })
   it('compares columns as a set in Columns mode', () => {
-    const a: SearchOptions = { mode: 'columns', columns: ['label0', 'label1'], extended: false }
+    const a: SearchOptions = { ...defaultSearchOptions, mode: 'columns', columns: ['label0', 'label1'] }
     expect(sameOptions(a, { ...a, columns: ['label1', 'label0'] })).toBe(true)
     expect(sameOptions(a, { ...a, columns: ['label1'] })).toBe(false)
   })

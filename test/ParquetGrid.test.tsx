@@ -9,7 +9,7 @@ import { loadSamples } from './samples.ts'
 describe('ParquetGrid', () => {
   let sample: Sample
   beforeAll(async () => {
-    [sample] = await loadSamples()
+    ;[sample] = await loadSamples()
   })
   afterEach(cleanup)
 
@@ -27,7 +27,9 @@ describe('ParquetGrid', () => {
     const table = screen.getByRole('table', { name: 'Compressed bytes per row group and column' })
 
     const { names, totals } = gridColumns(sample.metadata)
-    const headers = within(table).getAllByRole('columnheader').map(th => th.textContent)
+    const headers = within(table)
+      .getAllByRole('columnheader')
+      .map(th => th.textContent)
     expect(headers).toEqual(['Row group', 'Rows', 'Compressed', 'Uncompressed', 'Pages', ...names])
 
     const stats = rowGroupStats(sample.metadata.row_groups[0])

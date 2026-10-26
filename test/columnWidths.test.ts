@@ -6,8 +6,12 @@ function memoryStorage(initial: Record<string, string> = {}) {
   return {
     data,
     getItem: (key: string) => data.get(key) ?? null,
-    setItem: (key: string, value: string) => { data.set(key, value) },
-    removeItem: (key: string) => { data.delete(key) },
+    setItem: (key: string, value: string) => {
+      data.set(key, value)
+    },
+    removeItem: (key: string) => {
+      data.delete(key)
+    },
   }
 }
 
@@ -22,13 +26,17 @@ describe('loadWidths / saveWidths', () => {
   it('ignores corrupt JSON, non-objects and invalid or too small widths', () => {
     expect(loadWidths(memoryStorage({ k: '{oops' }), 'k')).toEqual({})
     expect(loadWidths(memoryStorage({ k: '[1,2]' }), 'k')).toEqual({})
-    expect(loadWidths(memoryStorage({ k: JSON.stringify({ a: 'x', b: -5, c: minColumnWidth - 1, d: 80 }) }), 'k')).toEqual({ d: 80 })
+    expect(
+      loadWidths(memoryStorage({ k: JSON.stringify({ a: 'x', b: -5, c: minColumnWidth - 1, d: 80 }) }), 'k'),
+    ).toEqual({ d: 80 })
   })
 })
 
 describe('adjustWidths', () => {
   it('does nothing when the columns fit or the space is unknown', () => {
-    expect(adjustWidths({ columns: ['a', 'b'], fixed: {}, measured: { a: 100, b: 100 }, maxTotalWidth: 1000 })).toEqual({})
+    expect(adjustWidths({ columns: ['a', 'b'], fixed: {}, measured: { a: 100, b: 100 }, maxTotalWidth: 1000 })).toEqual(
+      {},
+    )
     expect(adjustWidths({ columns: ['a'], fixed: {}, measured: { a: 5000 } })).toEqual({})
   })
 

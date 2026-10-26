@@ -28,7 +28,8 @@ describe('computeSlice', () => {
 
     const bottom = computeSlice({ numRows, scrollTop: maxCanvasHeight - viewportHeight, viewportHeight, headerHeight })
     expect(bottom.visibleEnd).toBe(numRows)
-    const lastRowBottom = bottom.top - (maxCanvasHeight - viewportHeight) + headerHeight + (numRows - bottom.renderStart) * rowHeight
+    const lastRowBottom =
+      bottom.top - (maxCanvasHeight - viewportHeight) + headerHeight + (numRows - bottom.renderStart) * rowHeight
     expect(lastRowBottom).toBeCloseTo(viewportHeight, 3)
   })
 })

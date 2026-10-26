@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { messages } from '../src/lib/search.ts'
 import type { SubmittedSearch } from '../src/lib/search.ts'
+import { messages } from '../src/lib/search.ts'
 import SearchBar from '../src/search/SearchBar.tsx'
 
 describe('SearchBar', () => {
@@ -11,7 +11,9 @@ describe('SearchBar', () => {
   function setup(status = '') {
     const onSubmit = vi.fn<(search: SubmittedSearch | undefined) => void>()
     render(() => <SearchBar onSubmit={onSubmit} status={status} />)
-    const form = screen.getByRole('search', { name: 'Search' })
+    // aria-query 5.3.0 does not map <search> to role search as browsers do
+    const landmark = document.querySelector('search[aria-label="Search"]')
+    const form = landmark?.querySelector('form') as HTMLFormElement
     const input = screen.getByRole('searchbox', { name: 'Search' })
     const button = screen.getByRole('button', { name: 'Search' })
     function search(query: string) {
@@ -71,14 +73,36 @@ describe('SearchBar', () => {
     expect(screen.queryByText(/Options changed/)).toBeNull()
   })
 
+  it('shows the match choice in both modes, Includes string by default, applied on submit', () => {
+    const { onSubmit, search } = setup()
+    const group = screen.getByRole('group', { name: 'Match' })
+    expect(within(group).getByRole<HTMLInputElement>('radio', { name: 'Includes string' }).checked).toBe(true)
+
+    fireEvent.click(within(group).getByRole('radio', { name: 'Exact match' }))
+    expect(screen.getByText('Options changed – press Search to update.')).toBeTruthy()
+    search('www.svt.se')
+    expect(onSubmit.mock.calls[0][0]?.predicate.columns).toEqual(['label0', 'label1', 'label2'])
+    expect(screen.queryByText(/Options changed/)).toBeNull()
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Columns' }))
+    search('svt')
+    const columnsSearch = onSubmit.mock.calls[1][0]
+    expect(columnsSearch?.predicate.matches({ label1: 'svt' })).toBe(true)
+    expect(columnsSearch?.predicate.matches({ label1: 'svtplay' })).toBe(false)
+  })
+
   it('shows the column checkboxes only in Columns mode, with label1 checked by default', () => {
     setup()
     expect(screen.queryByRole('group', { name: 'Columns' })).toBeNull()
     fireEvent.click(screen.getByRole('radio', { name: 'Columns' }))
     const group = screen.getByRole('group', { name: 'Columns' })
     const boxes = within(group).getAllByRole('checkbox')
-    expect(boxes.map(box => box.closest('label')?.textContent)).toEqual(Array.from({ length: 10 }, (_, i) => `label${i}`))
-    expect(boxes.filter(box => (box as HTMLInputElement).checked).map(box => box.closest('label')?.textContent)).toEqual(['label1'])
+    expect(boxes.map(box => box.closest('label')?.textContent)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `label${i}`),
+    )
+    expect(
+      boxes.filter(box => (box as HTMLInputElement).checked).map(box => box.closest('label')?.textContent),
+    ).toEqual(['label1'])
   })
 
   it('tells before submitting that at least one column is needed, and does not search without one', () => {
@@ -109,8 +133,12 @@ describe('SearchBar', () => {
 
   it('opens the help in a modal dialog with a Close button, including how to sort the table', () => {
     // jsdom does not implement modal dialogs
-    const showModal = vi.fn(function (this: HTMLDialogElement) { this.setAttribute('open', '') })
-    const close = vi.fn(function (this: HTMLDialogElement) { this.removeAttribute('open') })
+    const showModal = vi.fn(function (this: HTMLDialogElement) {
+      this.setAttribute('open', '')
+    })
+    const close = vi.fn(function (this: HTMLDialogElement) {
+      this.removeAttribute('open')
+    })
     Object.assign(HTMLDialogElement.prototype, { showModal, close })
     setup()
     const help = screen.getByRole('button', { name: 'Help' })
@@ -120,22 +148,30 @@ describe('SearchBar', () => {
     expect(showModal).toHaveBeenCalledTimes(1)
     const dialog = screen.getByRole('dialog', { name: 'Help' })
     expect(document.activeElement).toBe(within(dialog).getByRole('heading', { name: 'Help' }))
-    expect(dialog.textContent).toContain('www.svt.se')
-    expect(dialog.textContent).toContain('Click or select a column header to sort. Click/select Row number header to restore file order.')
+    expect(dialog.textContent).toContain('Exact match or includes string')
+    expect(dialog.textContent).toContain(
+      'Click or select a column header to sort. Click/select Row number header to restore file order.',
+    )
     expect(dialog.querySelector('button:last-of-type')?.textContent).toBe('Close')
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
     expect(close).toHaveBeenCalledTimes(1)
   })
 
-  it('places the column choice right after the mode and the Options changed note below the options', () => {
+  it('places the match and column choices right after the mode and the Options changed note below the options', () => {
     const { form } = setup()
     fireEvent.click(screen.getByRole('radio', { name: 'Columns' }))
     const order = [...form.querySelectorAll('input, p.search-note')].map(element =>
-      element instanceof HTMLInputElement ? element.closest('label')?.textContent.trim() : element.textContent)
+      element instanceof HTMLInputElement ? element.closest('label')?.textContent.trim() : element.textContent,
+    )
     expect(order.slice(1)).toEqual([
-      'Domain', 'Columns', ...Array.from({ length: 10 }, (_, i) => `label${i}`),
-      'Extended search (all files)', 'Options changed – press Search to update.',
+      'Domain',
+      'Columns',
+      'Includes string',
+      'Exact match',
+      ...Array.from({ length: 10 }, (_, i) => `label${i}`),
+      'Extended search (all files)',
+      'Options changed – press Search to update.',
     ])
   })
 })

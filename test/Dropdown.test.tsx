@@ -6,11 +6,12 @@ import Dropdown from '../src/components/Dropdown.tsx'
 
 function renderLensMenu() {
   const [lens, setLens] = createSignal('table')
-  const items = () => ['table', 'metadata', 'grid'].map(name => ({
-    label: name,
-    checked: lens() === name,
-    onSelect: () => setLens(name),
-  }))
+  const items = () =>
+    ['table', 'metadata', 'grid'].map(name => ({
+      label: name,
+      checked: lens() === name,
+      onSelect: () => setLens(name),
+    }))
   render(() => <Dropdown label={lens()} items={items()} />)
   return { lens, button: screen.getByRole('button', { name: 'table' }) }
 }

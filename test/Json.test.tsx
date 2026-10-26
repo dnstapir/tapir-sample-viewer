@@ -7,7 +7,9 @@ describe('Json', () => {
   afterEach(cleanup)
 
   it('renders non-JSON values: bigint, Date, undefined', () => {
-    const { container } = render(() => <Json json={{ size: 12n, when: new Date('2026-04-15T09:20:08Z'), none: undefined, nested: { a: 'x' } }} />)
+    const { container } = render(() => (
+      <Json json={{ size: 12n, when: new Date('2026-04-15T09:20:08Z'), none: undefined, nested: { a: 'x' } }} />
+    ))
     const text = container.textContent
     expect(text).toContain('size: 12')
     expect(text).toContain('when: "2026-04-15T09:20:08.000Z"')

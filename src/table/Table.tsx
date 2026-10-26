@@ -1,7 +1,18 @@
 import type { DataFrame, Direction, OrderBy } from 'hightable/dataframe'
 import { stringify, toggleColumn } from 'hightable/dataframe'
 import type { JSX } from 'solid-js'
-import { For, Show, createEffect, createMemo, createSignal, createUniqueId, on, onCleanup, onMount, untrack } from 'solid-js'
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  createUniqueId,
+  For,
+  on,
+  onCleanup,
+  onMount,
+  Show,
+  untrack,
+} from 'solid-js'
 import Dropdown from '../components/Dropdown.tsx'
 import { isAbortError } from '../lib/abort.ts'
 import type { Widths } from '../lib/columnWidths.ts'
@@ -53,10 +64,14 @@ export default function Table(props: TableProps): JSX.Element {
 
   const [version, setVersion] = createSignal(0)
   onMount(() => {
-    function bump() { setVersion(v => v + 1) }
+    function bump() {
+      setVersion(v => v + 1)
+    }
     const events = ['resolve', 'update', 'numrowschange'] as const
     for (const type of events) df.eventTarget?.addEventListener(type, bump)
-    onCleanup(() => { for (const type of events) df.eventTarget?.removeEventListener(type, bump) })
+    onCleanup(() => {
+      for (const type of events) df.eventTarget?.removeEventListener(type, bump)
+    })
   })
 
   const [orderBy, setOrderBy] = createSignal<OrderBy>([])
@@ -69,12 +84,14 @@ export default function Table(props: TableProps): JSX.Element {
   const [scrollTop, setScrollTop] = createSignal(0)
   const [viewport, setViewport] = createSignal({ width: 0, height: 0 })
   const [header, setHeader] = createSignal({ height: 33, cornerWidth: 0 })
-  const slice = createMemo(() => computeSlice({
-    numRows: numRows(),
-    scrollTop: scrollTop(),
-    viewportHeight: viewport().height,
-    headerHeight: header().height,
-  }))
+  const slice = createMemo(() =>
+    computeSlice({
+      numRows: numRows(),
+      scrollTop: scrollTop(),
+      viewportHeight: viewport().height,
+      headerHeight: header().height,
+    }),
+  )
   const range = createMemo(() => ({ start: slice().renderStart, end: slice().renderEnd }), undefined, {
     equals: (a, b) => a.start === b.start && a.end === b.end,
   })
@@ -98,12 +115,16 @@ export default function Table(props: TableProps): JSX.Element {
     }
     measure()
     element.addEventListener('scroll', onScroll)
-    onCleanup(() => { element.removeEventListener('scroll', onScroll) })
+    onCleanup(() => {
+      element.removeEventListener('scroll', onScroll)
+    })
     if (typeof ResizeObserver !== 'undefined') {
       const observer = new ResizeObserver(measure)
       observer.observe(element)
       if (headerRow) observer.observe(headerRow)
-      onCleanup(() => { observer.disconnect() })
+      onCleanup(() => {
+        observer.disconnect()
+      })
     }
   })
 
@@ -113,11 +134,14 @@ export default function Table(props: TableProps): JSX.Element {
     const order = orderBy()
     if (!df.fetch || end <= start) return
     const controller = new AbortController()
-    df.fetch({ rowStart: start, rowEnd: end, columns: fetchColumns, orderBy: order, signal: controller.signal })
-      .catch((error: unknown) => {
+    df.fetch({ rowStart: start, rowEnd: end, columns: fetchColumns, orderBy: order, signal: controller.signal }).catch(
+      (error: unknown) => {
         if (!isAbortError(error)) props.onError(error)
-      })
-    onCleanup(() => { controller.abort() })
+      },
+    )
+    onCleanup(() => {
+      controller.abort()
+    })
   })
 
   function getCell(row: number, column: string) {
@@ -132,13 +156,23 @@ export default function Table(props: TableProps): JSX.Element {
 
   const [fixed, setFixed] = createSignal<Widths>(loadWidths(localStorage, storageKey))
   const [measured, setMeasured] = createSignal<Widths>({})
-  createEffect(on(fixed, value => { saveWidths(localStorage, storageKey, value) }, { defer: true }))
-  const adjusted = createMemo(() => adjustWidths({
-    columns: columns(),
-    fixed: fixed(),
-    measured: measured(),
-    maxTotalWidth: viewport().width > 0 ? viewport().width - header().cornerWidth : undefined,
-  }))
+  createEffect(
+    on(
+      fixed,
+      value => {
+        saveWidths(localStorage, storageKey, value)
+      },
+      { defer: true },
+    ),
+  )
+  const adjusted = createMemo(() =>
+    adjustWidths({
+      columns: columns(),
+      fixed: fixed(),
+      measured: measured(),
+      maxTotalWidth: viewport().width > 0 ? viewport().width - header().cornerWidth : undefined,
+    }),
+  )
   function width(column: string): number | undefined {
     return fixed()[column] ?? adjusted()[column] ?? measured()[column]
   }
@@ -226,7 +260,7 @@ export default function Table(props: TableProps): JSX.Element {
 
   const activeCellRendered = () => {
     const { row } = position()
-    return row === 1 || row - 2 >= range().start && row - 2 < range().end
+    return row === 1 || (row - 2 >= range().start && row - 2 < range().end)
   }
 
   function onGridFocusIn(event: FocusEvent) {
@@ -262,7 +296,7 @@ export default function Table(props: TableProps): JSX.Element {
 
   function onScrollerKeyDown(event: KeyboardEvent) {
     if (event.target !== event.currentTarget) return
-    if (event.key === 'Tab' && !event.shiftKey || event.key === 'Enter' || event.key === ' ') {
+    if ((event.key === 'Tab' && !event.shiftKey) || event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       goTo(position())
     }
@@ -290,122 +324,162 @@ export default function Table(props: TableProps): JSX.Element {
 
   const rowNumberCharacters = () => Math.max(numRows().toLocaleString('en-US').length, 3)
 
-  return <div class="table" style={{ '--row-number-characters': String(rowNumberCharacters()), '--column-header-height': `${header().height}px` }}>
+  return (
     <div
-      ref={el => { scroller = el }}
-      class="table-scroll"
-      role={activeCellRendered() ? undefined : 'group'}
-      aria-label={activeCellRendered() ? undefined : props.label}
-      tabIndex={activeCellRendered() ? -1 : 0}
-      onKeyDown={onScrollerKeyDown}
+      class="table"
+      style={{
+        '--row-number-characters': String(rowNumberCharacters()),
+        '--column-header-height': `${header().height}px`,
+      }}
     >
-      <div class="table-canvas" style={{ height: `${slice().canvasHeight}px` }}>
-        <table
-          role="grid"
-          aria-readonly="true"
-          aria-rowcount={rowCount()}
-          aria-colcount={colCount()}
-          style={{ top: `${slice().top}px` }}
-          onKeyDown={onGridKeyDown}
-          onFocusIn={onGridFocusIn}
-        >
-          <caption id={captionId} class="visually-hidden">{props.label}</caption>
-          <thead>
-            <tr ref={el => { headerRow = el }} aria-rowindex={1} aria-label="Column headers">
-              <th
-                class="table-corner"
-                scope="col"
-                role="columnheader"
-                aria-colindex={1}
-                aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
-                tabIndex={tabIndexFor(1, 1)}
-                onMouseDown={() => setPosition({ row: 1, col: 1 })}
-                onClick={() => { sortBy([]) }}
-                onKeyDown={event => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    sortBy([])
-                  }
+      <div
+        ref={el => {
+          scroller = el
+        }}
+        class="table-scroll"
+        role={activeCellRendered() ? undefined : 'group'}
+        aria-label={activeCellRendered() ? undefined : props.label}
+        tabIndex={activeCellRendered() ? -1 : 0}
+        onKeyDown={onScrollerKeyDown}
+      >
+        <div class="table-canvas" style={{ height: `${slice().canvasHeight}px` }}>
+          <table
+            role="grid"
+            aria-rowcount={rowCount()}
+            aria-colcount={colCount()}
+            style={{ top: `${slice().top}px` }}
+            onKeyDown={onGridKeyDown}
+            onFocusIn={onGridFocusIn}
+          >
+            <caption id={captionId} class="visually-hidden">
+              {props.label}
+            </caption>
+            <thead>
+              <tr
+                ref={el => {
+                  headerRow = el
                 }}
+                aria-rowindex={1}
+                aria-label="Column headers"
               >
-                <span class="visually-hidden">Row number</span>
-                <span aria-hidden="true">{orderBy().length === 0 ? '\u2b61' : '\u21c5'}</span>
-              </th>
-              <For each={columns()}>
-                {(column, index) => <ColumnHeader
-                  column={column}
-                  colIndex={index() + 2}
-                  orderBy={orderBy()}
-                  width={width(column)}
-                  fixedWidth={fixed()[column] !== undefined}
-                  tabIndex={tabIndexFor(1, index() + 2)}
-                  canHide={columns().length > 1}
-                  canShowAll={hidden().size > 0}
-                  ref={el => { headerCells.set(column, el) }}
-                  onFocusCell={() => setPosition({ row: 1, col: index() + 2 })}
-                  onToggleSort={() => { toggleSort(column) }}
-                  onSort={direction => { setColumnSort(column, direction) }}
-                  onHide={() => { hideColumn(column) }}
-                  onShowAll={() => setHidden(new Set<string>())}
-                  onResize={value => { resizeTo(column, value) }}
-                  onAutoResize={() => { autoResize(column) }}
-                />}
-              </For>
-            </tr>
-          </thead>
-          <tbody>
-            <For each={rows()}>
-              {row => {
-                const rowNumber = () => getRowNumber(row)
-                const rowLabel = () => {
-                  const value = rowNumber()
-                  return value === undefined ? undefined : (value + 1).toLocaleString('en-US')
-                }
-                return <tr aria-rowindex={row + 2} aria-label={rowLabel() === undefined ? undefined : `Row ${rowLabel()}`}>
-                  <th
-                    scope="row"
-                    role="rowheader"
-                    aria-colindex={1}
-                    aria-busy={rowNumber() === undefined}
-                    tabIndex={tabIndexFor(row + 2, 1)}
-                    onMouseDown={() => setPosition({ row: row + 2, col: 1 })}
-                    onCopy={event => { copyOnEvent(event, rowLabel()) }}
-                  >
-                    {rowLabel()}
-                  </th>
-                  <For each={columns()}>
-                    {(column, index) => {
-                      const cell = () => getCell(row, column)
-                      const text = () => {
-                        const resolved = cell()
-                        return resolved === undefined ? undefined : stringify(resolved.value)
-                      }
-                      return <td
-                        role="gridcell"
-                        aria-colindex={index() + 2}
-                        aria-busy={cell() === undefined}
-                        tabIndex={tabIndexFor(row + 2, index() + 2)}
-                        style={widthStyle(width(column))}
-                        title={cellTitle(text())}
-                        onMouseDown={() => setPosition({ row: row + 2, col: index() + 2 })}
-                        onCopy={event => { copyOnEvent(event, text()) }}
+                <th
+                  class="table-corner"
+                  scope="col"
+                  aria-colindex={1}
+                  aria-sort={orderBy().length === 0 ? 'ascending' : 'none'}
+                  tabIndex={tabIndexFor(1, 1)}
+                  onMouseDown={() => setPosition({ row: 1, col: 1 })}
+                  onClick={() => {
+                    sortBy([])
+                  }}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      sortBy([])
+                    }
+                  }}
+                >
+                  <span class="visually-hidden">Row number</span>
+                  <span aria-hidden="true">{orderBy().length === 0 ? '\u2b61' : '\u21c5'}</span>
+                </th>
+                <For each={columns()}>
+                  {(column, index) => (
+                    <ColumnHeader
+                      column={column}
+                      colIndex={index() + 2}
+                      orderBy={orderBy()}
+                      width={width(column)}
+                      fixedWidth={fixed()[column] !== undefined}
+                      tabIndex={tabIndexFor(1, index() + 2)}
+                      canHide={columns().length > 1}
+                      canShowAll={hidden().size > 0}
+                      ref={el => {
+                        headerCells.set(column, el)
+                      }}
+                      onFocusCell={() => setPosition({ row: 1, col: index() + 2 })}
+                      onToggleSort={() => {
+                        toggleSort(column)
+                      }}
+                      onSort={direction => {
+                        setColumnSort(column, direction)
+                      }}
+                      onHide={() => {
+                        hideColumn(column)
+                      }}
+                      onShowAll={() => setHidden(new Set<string>())}
+                      onResize={value => {
+                        resizeTo(column, value)
+                      }}
+                      onAutoResize={() => {
+                        autoResize(column)
+                      }}
+                    />
+                  )}
+                </For>
+              </tr>
+            </thead>
+            <tbody>
+              <For each={rows()}>
+                {row => {
+                  const rowNumber = () => getRowNumber(row)
+                  const rowLabel = () => {
+                    const value = rowNumber()
+                    return value === undefined ? undefined : (value + 1).toLocaleString('en-US')
+                  }
+                  return (
+                    <tr aria-rowindex={row + 2} aria-label={rowLabel() === undefined ? undefined : `Row ${rowLabel()}`}>
+                      <th
+                        scope="row"
+                        aria-colindex={1}
+                        aria-busy={rowNumber() === undefined}
+                        tabIndex={tabIndexFor(row + 2, 1)}
+                        onMouseDown={() => setPosition({ row: row + 2, col: 1 })}
+                        onCopy={event => {
+                          copyOnEvent(event, rowLabel())
+                        }}
                       >
-                        <Show when={cell() === undefined} fallback={text()}>
-                          <span class="visually-hidden">Loading</span>
-                        </Show>
-                      </td>
-                    }}
-                  </For>
-                </tr>
-              }}
-            </For>
-          </tbody>
-        </table>
+                        {rowLabel()}
+                      </th>
+                      <For each={columns()}>
+                        {(column, index) => {
+                          const cell = () => getCell(row, column)
+                          const text = () => {
+                            const resolved = cell()
+                            return resolved === undefined ? undefined : stringify(resolved.value)
+                          }
+                          return (
+                            <td
+                              aria-colindex={index() + 2}
+                              aria-busy={cell() === undefined}
+                              tabIndex={tabIndexFor(row + 2, index() + 2)}
+                              style={widthStyle(width(column))}
+                              title={cellTitle(text())}
+                              onMouseDown={() => setPosition({ row: row + 2, col: index() + 2 })}
+                              onCopy={event => {
+                                copyOnEvent(event, text())
+                              }}
+                            >
+                              <Show when={cell() === undefined} fallback={text()}>
+                                <span class="visually-hidden">Loading</span>
+                              </Show>
+                            </td>
+                          )
+                        }}
+                      </For>
+                    </tr>
+                  )
+                }}
+              </For>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <p class="visually-hidden" role="status">
+        {sortStatus()}
+      </p>
     </div>
-    <p class="visually-hidden" role="status">{sortStatus()}</p>
-  </div>
+  )
 }
 
 function withoutKey(widths: Widths, key: string): Widths {
@@ -434,64 +508,132 @@ interface ColumnHeaderProps {
 function ColumnHeader(props: ColumnHeaderProps): JSX.Element {
   let cell: HTMLTableCellElement | undefined
   const orderIndex = () => props.orderBy.findIndex(item => item.column === props.column)
-  const direction = () => orderIndex() >= 0 ? props.orderBy[orderIndex()].direction : undefined
-  const ariaSort = () => orderIndex() === 0 ? direction() : 'none'
-  const indicator = () => direction() === 'ascending' ? '\u2b61' : direction() === 'descending' ? '\u2b63' : '\u21c5'
-  const resizeBy = (delta: number) => { props.onResize((props.width ?? cell?.offsetWidth ?? 0) + delta) }
+  const direction = () => (orderIndex() >= 0 ? props.orderBy[orderIndex()].direction : undefined)
+  const ariaSort = () => (orderIndex() === 0 ? direction() : 'none')
+  const indicator = () => (direction() === 'ascending' ? '\u2b61' : direction() === 'descending' ? '\u2b63' : '\u21c5')
+  const resizeBy = (delta: number) => {
+    props.onResize((props.width ?? cell?.offsetWidth ?? 0) + delta)
+  }
   // sorting is also here because the VoiceOver cursor skips the header cell
   const menuItems = () => [
-    { label: 'Sort ascending', checked: direction() === 'ascending', onSelect: () => { props.onSort('ascending') } },
-    { label: 'Sort descending', checked: direction() === 'descending', onSelect: () => { props.onSort('descending') } },
-    { label: 'Remove sort', checked: direction() === undefined, onSelect: () => { props.onSort(undefined) } },
-    { label: 'Wider', onSelect: () => { resizeBy(widthStep) } },
-    { label: 'Narrower', onSelect: () => { resizeBy(-widthStep) } },
-    { label: 'Fit to content', onSelect: () => { props.onAutoResize() } },
-    ...props.canHide ? [{ label: 'Hide column', onSelect: () => { props.onHide() } }] : [],
-    ...props.canShowAll ? [{ label: 'Show all columns', onSelect: () => { props.onShowAll() } }] : [],
+    {
+      label: 'Sort ascending',
+      checked: direction() === 'ascending',
+      onSelect: () => {
+        props.onSort('ascending')
+      },
+    },
+    {
+      label: 'Sort descending',
+      checked: direction() === 'descending',
+      onSelect: () => {
+        props.onSort('descending')
+      },
+    },
+    {
+      label: 'Remove sort',
+      checked: direction() === undefined,
+      onSelect: () => {
+        props.onSort(undefined)
+      },
+    },
+    {
+      label: 'Wider',
+      onSelect: () => {
+        resizeBy(widthStep)
+      },
+    },
+    {
+      label: 'Narrower',
+      onSelect: () => {
+        resizeBy(-widthStep)
+      },
+    },
+    {
+      label: 'Fit to content',
+      onSelect: () => {
+        props.onAutoResize()
+      },
+    },
+    ...(props.canHide
+      ? [
+          {
+            label: 'Hide column',
+            onSelect: () => {
+              props.onHide()
+            },
+          },
+        ]
+      : []),
+    ...(props.canShowAll
+      ? [
+          {
+            label: 'Show all columns',
+            onSelect: () => {
+              props.onShowAll()
+            },
+          },
+        ]
+      : []),
   ]
 
-  return <th
-    ref={el => {
-      cell = el
-      props.ref(el)
-    }}
-    scope="col"
-    role="columnheader"
-    aria-colindex={props.colIndex}
-    aria-sort={ariaSort()}
-    aria-label={props.column}
-    tabIndex={props.tabIndex}
-    style={widthStyle(props.width)}
-    data-order-index={orderIndex() >= 0 ? orderIndex() : undefined}
-    data-fixed-width={props.fixedWidth ? 'true' : undefined}
-    onMouseDown={() => { props.onFocusCell() }}
-    onClick={() => { props.onToggleSort() }}
-    onKeyDown={event => {
-      if (event.target !== event.currentTarget) return
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        event.stopPropagation()
-        props.onToggleSort()
-      }
-    }}
-    onCopy={event => { copyOnEvent(event, props.column) }}
-  >
-    {/* named by aria-label; hidden so it is not read twice */}
-    <span class="column-name" aria-hidden="true">{props.column}</span>
-    <span class="sort-indicator" aria-hidden="true">{indicator()}</span>
-    <Dropdown
-      label={<span aria-hidden="true">{'\u22ee'}</span>}
-      ariaLabel="Column menu"
-      noCaret
-      buttonClass="column-menu-button"
+  return (
+    <th
+      ref={el => {
+        cell = el
+        props.ref(el)
+      }}
+      scope="col"
+      aria-colindex={props.colIndex}
+      aria-sort={ariaSort()}
+      aria-label={props.column}
       tabIndex={props.tabIndex}
-      portal
-      items={menuItems()}
-    />
-    <ColumnResizer
-      width={props.width}
-      resizeTo={value => { props.onResize(value) }}
-      autoResize={() => { props.onAutoResize() }}
-    />
-  </th>
+      style={widthStyle(props.width)}
+      data-order-index={orderIndex() >= 0 ? orderIndex() : undefined}
+      data-fixed-width={props.fixedWidth ? 'true' : undefined}
+      onMouseDown={() => {
+        props.onFocusCell()
+      }}
+      onClick={() => {
+        props.onToggleSort()
+      }}
+      onKeyDown={event => {
+        if (event.target !== event.currentTarget) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          event.stopPropagation()
+          props.onToggleSort()
+        }
+      }}
+      onCopy={event => {
+        copyOnEvent(event, props.column)
+      }}
+    >
+      {/* named by aria-label; hidden so it is not read twice */}
+      <span class="column-name" aria-hidden="true">
+        {props.column}
+      </span>
+      <span class="sort-indicator" aria-hidden="true">
+        {indicator()}
+      </span>
+      <Dropdown
+        label={<span aria-hidden="true">{'\u22ee'}</span>}
+        ariaLabel="Column menu"
+        noCaret
+        buttonClass="column-menu-button"
+        tabIndex={props.tabIndex}
+        portal
+        items={menuItems()}
+      />
+      <ColumnResizer
+        width={props.width}
+        resizeTo={value => {
+          props.onResize(value)
+        }}
+        autoResize={() => {
+          props.onAutoResize()
+        }}
+      />
+    </th>
+  )
 }

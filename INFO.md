@@ -19,7 +19,9 @@ Browser viewer for DNS Tapir parquet files, built with [SolidJS](https://www.sol
 ```bash
 pnpm install          # install dependencies (CI uses --frozen-lockfile)
 pnpm dev              # development server, http://localhost:5173
-pnpm lint             # ESLint
+pnpm lint             # Biome lint
+pnpm lint:fix                 # Biome lint safe fixes
+pnpm format           # Biome format + organize imports (CI fails on unformatted code)
 pnpm typecheck        # TypeScript
 pnpm test             # Vitest (unit, component and axe-core accessibility tests)
 pnpm build            # type check + production build into dist/
@@ -29,13 +31,14 @@ pnpm generate:large   # write a large test file (200,000 rows) to src/parquets/,
 
 ## Data
 
-The parquet files in `src/parquets/` are bundled with the app. All file access goes through `src/lib/dataset.ts` and `src/lib/source.ts`, so the data source can be changed later.
+The app loads the file list (`index.json`) and the parquet files from `https://public.test.dnstapir.se/parquet-samples/`. All file access goes through `src/lib/dataset.ts`. The files in `src/parquets/` are only used by the tests.
 
 `pnpm generate:large [rows]` creates `src/parquets/large-<rows>.parquet` from the sample rows, for testing large files locally. It is gitignored and not used by the tests, so CI never builds or deploys it; a local `pnpm build` does include it while the file exists.
 
 ## Deployment
 
-Pushing to `main` runs `.github/workflows/deploy.yaml`: install, lint, test, build, check that `dist/` contains no React, and deploy `dist/` to GitHub Pages. The build uses relative paths (`base: './'`), so it works from any sub-path or static host.
+Before you push - run `pnpm format` to format nes code and `pnpm lint` to check that lint-rules are applied. if neccesary run `pnpm lin:fix`to fix lint problems.
+Every push and every pull request to `main` runs `.github/workflows/check.yaml`: `biome ci` (lint + format check), typecheck and tests. The check is not required for merging; workflow runs from forks need maintainer approval. Pushing to `main` also runs `.github/workflows/deploy.yaml`: install, `biome ci`, test, build, check that `dist/` contains no React, and deploy `dist/` to GitHub Pages. The build uses relative paths (`base: './'`), so it works from any sub-path or static host.
 
 ## Project docs
 

@@ -8,7 +8,7 @@ import { loadSamples } from './samples.ts'
 describe('ParquetLayout', () => {
   let sample: Sample
   beforeAll(async () => {
-    [sample] = await loadSamples()
+    ;[sample] = await loadSamples()
   })
   afterEach(cleanup)
 

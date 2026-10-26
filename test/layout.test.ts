@@ -10,30 +10,33 @@ function columnMeta(fields: Partial<ColumnMetaData>): ColumnMetaData {
 
 describe('getColumnRange', () => {
   it('starts at the dictionary page when it precedes the data page', () => {
-    expect(getColumnRange(columnMeta({ dictionary_page_offset: 4n, data_page_offset: 100n, total_compressed_size: 200n })))
-      .toEqual([4n, 204n])
+    expect(
+      getColumnRange(columnMeta({ dictionary_page_offset: 4n, data_page_offset: 100n, total_compressed_size: 200n })),
+    ).toEqual([4n, 204n])
   })
   it('starts at the data page when there is no dictionary page', () => {
-    expect(getColumnRange(columnMeta({ data_page_offset: 50n, total_compressed_size: 10n })))
-      .toEqual([50n, 60n])
+    expect(getColumnRange(columnMeta({ data_page_offset: 50n, total_compressed_size: 10n }))).toEqual([50n, 60n])
   })
   it('ignores a zero dictionary offset', () => {
-    expect(getColumnRange(columnMeta({ dictionary_page_offset: 0n, data_page_offset: 50n, total_compressed_size: 10n })))
-      .toEqual([50n, 60n])
+    expect(
+      getColumnRange(columnMeta({ dictionary_page_offset: 0n, data_page_offset: 50n, total_compressed_size: 10n })),
+    ).toEqual([50n, 60n])
   })
 })
 
 describe('columnPages', () => {
   it('splits a column chunk into contiguous pages in file order', () => {
-    expect(columnPages(columnMeta({ dictionary_page_offset: 4n, data_page_offset: 100n, total_compressed_size: 200n })))
-      .toEqual([
-        { name: 'Dictionary', start: 4n, end: 100n },
-        { name: 'Data', start: 100n, end: 204n },
-      ])
+    expect(
+      columnPages(columnMeta({ dictionary_page_offset: 4n, data_page_offset: 100n, total_compressed_size: 200n })),
+    ).toEqual([
+      { name: 'Dictionary', start: 4n, end: 100n },
+      { name: 'Data', start: 100n, end: 204n },
+    ])
   })
   it('returns a single data page without dictionary', () => {
-    expect(columnPages(columnMeta({ data_page_offset: 50n, total_compressed_size: 10n })))
-      .toEqual([{ name: 'Data', start: 50n, end: 60n }])
+    expect(columnPages(columnMeta({ data_page_offset: 50n, total_compressed_size: 10n }))).toEqual([
+      { name: 'Data', start: 50n, end: 60n },
+    ])
   })
 })
 
@@ -61,8 +64,8 @@ describe('collectLayoutItems', () => {
       ['index', 90n],
       ['index', 100n],
     ])
-    expect(items[2]).toEqual({ type: 'index', start: 90n, end: 93n, name: 'OffsetIndex\nRowGroup 1, Column \'a\'' })
-    expect(items[3]).toEqual({ type: 'index', start: 100n, end: 105n, name: 'ColumnIndex\nRowGroup 0, Column \'a\'' })
+    expect(items[2]).toEqual({ type: 'index', start: 90n, end: 93n, name: "OffsetIndex\nRowGroup 1, Column 'a'" })
+    expect(items[3]).toEqual({ type: 'index', start: 100n, end: 105n, name: "ColumnIndex\nRowGroup 0, Column 'a'" })
   })
 })
 
@@ -98,8 +101,8 @@ describe('layout of sample files', () => {
       const { start } = metadataRange(byteLength, metadata)
       const lastEnd = metadata.row_groups
         .flatMap(rowGroup => rowGroup.columns)
-        .map(column => column.meta_data ? getColumnRange(column.meta_data)[1] : 0n)
-        .reduce((a, b) => a > b ? a : b, 0n)
+        .map(column => (column.meta_data ? getColumnRange(column.meta_data)[1] : 0n))
+        .reduce((a, b) => (a > b ? a : b), 0n)
       expect(lastEnd).toBeLessThanOrEqual(BigInt(start))
     }
   })

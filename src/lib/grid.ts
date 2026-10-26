@@ -79,7 +79,12 @@ export function rowGroupTitle(index: number, stats: RowGroupStats): string {
   return title
 }
 
-export function columnCell(rowGroupIndex: number, rowGroup: RowGroup, columnIndex: number, columnMax: number): ColumnCell {
+export function columnCell(
+  rowGroupIndex: number,
+  rowGroup: RowGroup,
+  columnIndex: number,
+  columnMax: number,
+): ColumnCell {
   const column = rowGroup.columns[columnIndex]
   const numRows = Number(rowGroup.num_rows)
   const numValues = Number(column.meta_data?.num_values ?? 0n)
@@ -94,6 +99,6 @@ export function columnCell(rowGroupIndex: number, rowGroup: RowGroup, columnInde
   return {
     title,
     bytes: size,
-    widthPercent: columnMax > 0 ? size / columnMax * 100 : 0,
+    widthPercent: columnMax > 0 ? (size / columnMax) * 100 : 0,
   }
 }

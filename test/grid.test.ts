@@ -22,10 +22,7 @@ function rowGroup(columns: ColumnChunk[], numRows = 10n): RowGroup {
 }
 
 const metadata = {
-  row_groups: [
-    rowGroup([chunk('a', 100n), chunk('b', 300n)]),
-    rowGroup([chunk('a', 200n), chunk('b', 50n)]),
-  ],
+  row_groups: [rowGroup([chunk('a', 100n), chunk('b', 300n)]), rowGroup([chunk('a', 200n), chunk('b', 50n)])],
 } as FileMetaData
 
 describe('gridColumns', () => {
@@ -42,22 +39,35 @@ describe('gridColumns', () => {
     expect(gridColumns(noMeta).names).toEqual(['col0'])
   })
   it('handles files without row groups', () => {
-    expect(gridColumns({ row_groups: [] as RowGroup[] } as FileMetaData))
-      .toEqual({ names: [], totals: [], maxes: [], template: '' })
+    expect(gridColumns({ row_groups: [] as RowGroup[] } as FileMetaData)).toEqual({
+      names: [],
+      totals: [],
+      maxes: [],
+      template: '',
+    })
   })
 })
 
 describe('rowGroupStats + rowGroupTitle', () => {
   it('counts data and dictionary pages', () => {
     const rg = rowGroup([
-      chunk('a', 100n, { encoding_stats: [
-        { page_type: 'DICTIONARY_PAGE', encoding: 'PLAIN', count: 1 },
-        { page_type: 'DATA_PAGE', encoding: 'RLE_DICTIONARY', count: 2 },
-      ] }),
+      chunk('a', 100n, {
+        encoding_stats: [
+          { page_type: 'DICTIONARY_PAGE', encoding: 'PLAIN', count: 1 },
+          { page_type: 'DATA_PAGE', encoding: 'RLE_DICTIONARY', count: 2 },
+        ],
+      }),
       chunk('b', 300n, { encoding_stats: [{ page_type: 'DATA_PAGE_V2', encoding: 'PLAIN', count: 3 }] }),
     ])
     const stats = rowGroupStats(rg)
-    expect(stats).toEqual({ numRows: 10, compressed: 400, uncompressed: 800, totalPages: 6, dataPages: 5, dictPages: 1 })
+    expect(stats).toEqual({
+      numRows: 10,
+      compressed: 400,
+      uncompressed: 800,
+      totalPages: 6,
+      dataPages: 5,
+      dictPages: 1,
+    })
     expect(rowGroupTitle(2, stats)).toBe(
       'Row Group: 2\n10 rows\n400 bytes compressed\n800 bytes uncompressed\n6 pages (5 data, 1 dictionary)',
     )
@@ -67,9 +77,9 @@ describe('rowGroupStats + rowGroupTitle', () => {
     expect(rowGroupTitle(0, stats)).toBe('Row Group: 0\n10 rows\n100 bytes compressed\n200 bytes uncompressed')
   })
   it('omits the dictionary count when there are no dictionary pages', () => {
-    const stats = rowGroupStats(rowGroup([
-      chunk('a', 100n, { encoding_stats: [{ page_type: 'DATA_PAGE', encoding: 'PLAIN', count: 2 }] }),
-    ]))
+    const stats = rowGroupStats(
+      rowGroup([chunk('a', 100n, { encoding_stats: [{ page_type: 'DATA_PAGE', encoding: 'PLAIN', count: 2 }] })]),
+    )
     expect(rowGroupTitle(0, stats)).toMatch(/\n2 pages \(2 data\)$/)
   })
 })

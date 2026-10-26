@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import lockfile from '../pnpm-lock.yaml?raw'
 import packageJson from '../package.json' with { type: 'json' }
+import lockfile from '../pnpm-lock.yaml?raw'
 
 describe('package.json', () => {
   it('should have MIT license', () => {

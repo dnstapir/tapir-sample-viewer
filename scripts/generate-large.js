@@ -1,6 +1,6 @@
 // Writes a large test file from the sample rows (gitignored, never deployed).
 // Usage: pnpm generate:large [rows]   (default 200000 rows, row groups of 50000)
-import { readFileSync, readdirSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { parquetMetadata, parquetReadObjects } from 'hyparquet'
 import { compressors } from 'hyparquet-compressors'
 import { parquetWriteFile } from 'hyparquet-writer'
@@ -10,7 +10,9 @@ const numRows = Number(process.argv[2] ?? 200_000)
 const rowGroupSize = 50_000
 if (!Number.isInteger(numRows) || numRows <= 0) throw new Error(`invalid row count: ${process.argv[2]}`)
 
-const samples = readdirSync(dir).filter(name => name.endsWith('.parquet') && !name.startsWith('large-')).sort()
+const samples = readdirSync(dir)
+  .filter(name => name.endsWith('.parquet') && !name.startsWith('large-'))
+  .sort()
 if (samples.length === 0) throw new Error('no sample parquet files found')
 
 let schema
@@ -20,7 +22,7 @@ for (const name of samples) {
   const file = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
   const metadata = parquetMetadata(file)
   schema ??= metadata.schema
-  sampleRows.push(...await parquetReadObjects({ file, metadata, compressors }))
+  sampleRows.push(...(await parquetReadObjects({ file, metadata, compressors })))
 }
 
 const firstTime = sampleRows[0].start_time.getTime()

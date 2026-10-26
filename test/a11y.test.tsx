@@ -4,9 +4,9 @@ import axe from 'axe-core'
 import { sortableDataFrame } from 'hightable/dataframe'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import Layout from '../src/Layout.tsx'
-import Page from '../src/Page.tsx'
 import type { DataSet } from '../src/lib/dataset.ts'
 import { parquetDataFrame } from '../src/lib/parquetDataFrame.ts'
+import Page from '../src/Page.tsx'
 import { loadSamples, openFile } from './samples.ts'
 
 // colour contrast needs a real layout engine; it is checked in the browser
@@ -24,32 +24,47 @@ describe('accessibility (axe-core)', () => {
     const [sample] = await loadSamples()
     const file = await openFile(sample.path)
     const rows = parquetDataFrame(file, sample.metadata)
-    dataSet = { name: sample.name, url: sample.path, byteLength: sample.byteLength, metadata: sample.metadata, file, rows, df: sortableDataFrame(rows) }
+    dataSet = {
+      name: sample.name,
+      url: sample.path,
+      byteLength: sample.byteLength,
+      metadata: sample.metadata,
+      file,
+      rows,
+      df: sortableDataFrame(rows),
+    }
   })
   afterEach(cleanup)
 
   function renderPage(status = '') {
     const main = document.body.appendChild(document.createElement('main'))
-    render(() => <Layout>
-      <Page
-        entries={[{ name: dataSet.name, url: dataSet.url }]}
-        selectedIndex={0}
-        onSelect={vi.fn()}
-        dataSet={dataSet}
-        loading={false}
-        onSearch={vi.fn()}
-        searchStatus={status}
-        searching={false}
-        extended={false}
-        onError={vi.fn()}
-      />
-    </Layout>, { container: main })
+    render(
+      () => (
+        <Layout>
+          <Page
+            entries={[{ name: dataSet.name, url: dataSet.url }]}
+            selectedIndex={0}
+            onSelect={vi.fn()}
+            dataSet={dataSet}
+            loading={false}
+            onSearch={vi.fn()}
+            searchStatus={status}
+            searching={false}
+            extended={false}
+            onError={vi.fn()}
+          />
+        </Layout>
+      ),
+      { container: main },
+    )
   }
 
   async function showLens(name: string) {
     fireEvent.click(screen.getByRole('button', { name: /^View:/ }))
     fireEvent.click(screen.getByRole('menuitemradio', { name }))
-    await waitFor(() => { expect(screen.getByRole('button', { name: new RegExp(`^View:\\s*${name}$`) })).toBeTruthy() })
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: new RegExp(`^View:\\s*${name}$`) })).toBeTruthy()
+    })
   }
 
   it('reports violations (the check is not vacuous)', async () => {
@@ -60,13 +75,17 @@ describe('accessibility (axe-core)', () => {
 
   it('Table lens with data has no violations', async () => {
     renderPage('2 matching rows')
-    await waitFor(() => { expect(document.querySelector('td[aria-busy="true"]')).toBeNull() })
+    await waitFor(() => {
+      expect(document.querySelector('td[aria-busy="true"]')).toBeNull()
+    })
     expect(await violations()).toEqual([])
   })
 
   it('Table lens with the column menu open has no violations', async () => {
     renderPage()
-    fireEvent.click(within(screen.getByRole('columnheader', { name: 'label1' })).getByRole('button', { name: 'Column menu' }))
+    fireEvent.click(
+      within(screen.getByRole('columnheader', { name: 'label1' })).getByRole('button', { name: 'Column menu' }),
+    )
     expect(await violations()).toEqual([])
   })
 
@@ -74,7 +93,7 @@ describe('accessibility (axe-core)', () => {
     renderPage()
     fireEvent.click(screen.getByRole('radio', { name: 'Columns' }))
     fireEvent.click(screen.getByRole('checkbox', { name: 'label1' }))
-    fireEvent.submit(screen.getByRole('search'))
+    fireEvent.submit(document.querySelector('search form') as HTMLFormElement)
     expect(await violations()).toEqual([])
   })
 
