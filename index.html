@@ -1,16 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <!-- 'unsafe-inline' styles: the Vite dev server injects CSS as <style> -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self'; connect-src 'self' https://public.test.dnstapir.se; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
     <title>DNS Tapir Parquet Parser</title>
     <link rel="icon" href="TAPIR-negativ.svg" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600&display=swap"/>
-    <meta name="description" content="DNS Tapir Hyparquet">
-    <meta name="author" content="Hyperparam">
-    <meta name="keywords" content="dns, tapir, dnstapir, hyparquet, parquet, parquet file, parquet parser, parquet reader, parquet viewer, parquet data, apache parquet, hightable">
-    <meta name="theme-color" content="#4433aa">
+    <meta name="description" content="DNS Tapir Hyparquet" />
+    <meta name="author" content="Hyperparam" />
+    <meta name="keywords" content="dns, tapir, dnstapir, hyparquet, parquet, parquet file, parquet parser, parquet reader, parquet viewer, parquet data, apache parquet" />
+    <meta name="theme-color" content="#4433aa" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="Content-Security-Policy" content="connect-src 'self' https://public.test.dnstapir.se;">
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

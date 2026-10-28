@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -30,6 +30,21 @@ jobs:
         run: pnpm exec biome ci
       - name: Test
         run: pnpm run test
+  # separate job: test-only tooling never runs where the published dist/ is built
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install pnpm
+        run: npm install -g pnpm@11.25.0
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm run build
       - name: Check that the bundle contains no React
