@@ -13,11 +13,9 @@ app.config.timestamp_*.js
 # dependencies
 /node_modules
 
-# generated test data (pnpm generate:large)
-/src/parquets/large-*.parquet
-
 # IDEs and editors
 /.idea
+/.vscode/settings.json
 .project
 .classpath
 *.launch

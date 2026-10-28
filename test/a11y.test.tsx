@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@solidjs/testing-library'
 import axe from 'axe-core'
-import { sortableDataFrame } from 'hightable/dataframe'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import Layout from '../src/Layout.tsx'
 import type { DataSet } from '../src/lib/dataset.ts'
 import { parquetDataFrame } from '../src/lib/parquetDataFrame.ts'
+import { sortableDataFrame } from '../src/lib/sortableDataFrame.ts'
 import Page from '../src/Page.tsx'
 import { loadSamples, openFile } from './samples.ts'
 

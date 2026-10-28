@@ -1,10 +1,9 @@
-import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer, FileMetaData, RowGroup } from 'hyparquet'
 import { parquetReadObjects } from 'hyparquet'
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
-import { compressors } from 'hyparquet-compressors'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { parquetDataFrame, planChunks } from '../src/lib/parquetDataFrame.ts'
+import { sortableDataFrame } from '../src/lib/sortableDataFrame.ts'
 import type { Sample } from './samples.ts'
 import { loadSamples } from './samples.ts'
 
@@ -46,7 +45,7 @@ describe('parquetDataFrame on sample files', () => {
   beforeAll(async () => {
     ;[sample] = await loadSamples()
     file = await asyncBufferFromFile(sample.path)
-    expected = await parquetReadObjects({ file, metadata: sample.metadata, compressors })
+    expected = await parquetReadObjects({ file, metadata: sample.metadata })
   })
 
   it('exposes all top-level columns and the row count', () => {

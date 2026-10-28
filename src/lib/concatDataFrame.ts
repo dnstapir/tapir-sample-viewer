@@ -1,10 +1,5 @@
-import type { CustomEventTarget, DataFrame, DataFrameEvents } from 'hightable/dataframe'
-import {
-  checkSignal,
-  validateFetchParams,
-  validateGetCellParams,
-  validateGetRowNumberParams,
-} from 'hightable/dataframe'
+import type { CustomEventTarget, DataFrame, DataFrameEvents } from './dataframe.ts'
+import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRowNumberParams } from './dataframe.ts'
 
 export const fileColumn = 'File'
 

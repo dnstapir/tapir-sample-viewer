@@ -1,14 +1,13 @@
-import type { DataFrame, DataFrameEvents, ResolvedValue } from 'hightable/dataframe'
+import type { AsyncBuffer, ColumnData, FileMetaData } from 'hyparquet'
+import { parquetRead, parquetSchema } from 'hyparquet'
+import type { DataFrame, DataFrameEvents, ResolvedValue } from './dataframe.ts'
 import {
   checkSignal,
   createEventTarget,
   validateFetchParams,
   validateGetCellParams,
   validateGetRowNumberParams,
-} from 'hightable/dataframe'
-import type { AsyncBuffer, ColumnData, FileMetaData } from 'hyparquet'
-import { parquetRead, parquetSchema } from 'hyparquet'
-import { compressors } from 'hyparquet-compressors'
+} from './dataframe.ts'
 
 interface RowChunk {
   rowStart: number
@@ -59,7 +58,6 @@ export function parquetDataFrame(file: AsyncBuffer, metadata: FileMetaData): Dat
         rowStart: chunk.rowStart,
         rowEnd: chunk.rowEnd,
         columns: missing,
-        compressors,
         onChunk,
       }).catch((error: unknown) => {
         // forget failed reads so a later fetch can retry
