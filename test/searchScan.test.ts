@@ -1,8 +1,6 @@
-import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer } from 'hyparquet'
 import { parquetReadObjects } from 'hyparquet'
 import { asyncBufferFromFile } from 'hyparquet/src/node.js'
-import { compressors } from 'hyparquet-compressors'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { concatDataFrame, fileColumn } from '../src/lib/concatDataFrame.ts'
 import type { DataSet } from '../src/lib/dataset.ts'
@@ -11,6 +9,7 @@ import { parquetDataFrame } from '../src/lib/parquetDataFrame.ts'
 import type { SearchPredicate } from '../src/lib/search.ts'
 import { defaultSearchOptions, parseSearch } from '../src/lib/search.ts'
 import { scanRows, searchAll, searchDataSet } from '../src/lib/searchScan.ts'
+import { sortableDataFrame } from '../src/lib/sortableDataFrame.ts'
 import type { Sample } from './samples.ts'
 import { loadSamples } from './samples.ts'
 
@@ -33,7 +32,7 @@ describe('search on sample files', () => {
     loaded = await Promise.all(
       (await loadSamples()).map(async sample => {
         const file = await asyncBufferFromFile(sample.path)
-        const rows = await parquetReadObjects({ file, metadata: sample.metadata, compressors })
+        const rows = await parquetReadObjects({ file, metadata: sample.metadata })
         const df = parquetDataFrame(file, sample.metadata)
         const dataSet = {
           name: sample.name,

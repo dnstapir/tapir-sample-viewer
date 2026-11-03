@@ -10,7 +10,7 @@ export interface Sample {
   metadata: FileMetaData
 }
 
-const samplePaths = Object.keys(import.meta.glob(['../src/parquets/*.parquet', '!../src/parquets/large-*.parquet']))
+const samplePaths = Object.keys(import.meta.glob('../src/parquets/*.parquet'))
 
 // copied into this realm's ArrayBuffer: under jsdom, hyparquet's `instanceof ArrayBuffer` rejects Node's buffers
 export async function openFile(path: string): Promise<AsyncBuffer> {

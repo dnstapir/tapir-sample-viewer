@@ -1,5 +1,3 @@
-import type { DataFrame, Direction, OrderBy } from 'hightable/dataframe'
-import { stringify, toggleColumn } from 'hightable/dataframe'
 import type { JSX } from 'solid-js'
 import {
   createEffect,
@@ -17,6 +15,9 @@ import Dropdown from '../components/Dropdown.tsx'
 import { isAbortError } from '../lib/abort.ts'
 import type { Widths } from '../lib/columnWidths.ts'
 import { adjustWidths, loadWidths, minColumnWidth, saveWidths, widthsStorageKey } from '../lib/columnWidths.ts'
+import type { DataFrame, Direction, OrderBy } from '../lib/dataframe.ts'
+import { toggleColumn } from '../lib/dataframe.ts'
+import { stringify } from '../lib/stringify.ts'
 import { computeSlice, scrollTopForRow } from '../lib/viewport.ts'
 import ColumnResizer from './ColumnResizer.tsx'
 import './Table.css'

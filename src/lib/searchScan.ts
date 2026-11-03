@@ -1,12 +1,12 @@
-import type { DataFrame } from 'hightable/dataframe'
-import { checkSignal, sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer, FileMetaData } from 'hyparquet'
 import { parquetReadObjects, parquetSchema } from 'hyparquet'
-import { compressors } from 'hyparquet-compressors'
 import { concatDataFrame } from './concatDataFrame.ts'
+import type { DataFrame } from './dataframe.ts'
+import { checkSignal } from './dataframe.ts'
 import type { DataSet, DataSetEntry } from './dataset.ts'
 import { filteredDataFrame } from './filteredDataFrame.ts'
 import type { SearchPredicate } from './search.ts'
+import { sortableDataFrame } from './sortableDataFrame.ts'
 
 export interface SearchResult {
   df: DataFrame
@@ -34,7 +34,7 @@ export async function scanRows({
     checkSignal(signal)
     const rowEnd = rowStart + Number(rowGroup.num_rows)
     if (columns.length > 0) {
-      const rows = await parquetReadObjects({ file, metadata, columns, rowStart, rowEnd, compressors })
+      const rows = await parquetReadObjects({ file, metadata, columns, rowStart, rowEnd })
       rows.forEach((row, i) => {
         if (predicate.matches(row)) indexes.push(rowStart + i)
       })

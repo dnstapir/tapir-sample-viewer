@@ -1,11 +1,13 @@
-allowBuilds:
-  esbuild: true
+# Supply-chain protection (PLAN.md D14), set explicitly so it does not depend on pnpm's defaults.
+minimumReleaseAge: 1440
+trustPolicy: no-downgrade
+# versions older than one year skip the trust check (e.g. semver@6.3.1, a 2023 backport without provenance)
+trustPolicyIgnoreAfter: 525600
+blockExoticSubdeps: true
+strictDepBuilds: true
 
-# hightable declares react/react-dom as peers; only its React-free `hightable/dataframe` subpath is used.
 # @solidjs/testing-library declares @solidjs/router as a peer; it is only needed for router tests.
 autoInstallPeers: false
 peerDependencyRules:
   ignoreMissing:
-    - react
-    - react-dom
     - '@solidjs/router'

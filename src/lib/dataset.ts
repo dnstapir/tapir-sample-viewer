@@ -1,8 +1,8 @@
-import type { DataFrame } from 'hightable/dataframe'
-import { sortableDataFrame } from 'hightable/dataframe'
 import type { AsyncBuffer, FileMetaData } from 'hyparquet'
 import { asyncBufferFromUrl, cachedAsyncBuffer, parquetMetadataAsync } from 'hyparquet'
+import type { DataFrame } from './dataframe.ts'
 import { parquetDataFrame } from './parquetDataFrame.ts'
+import { sortableDataFrame } from './sortableDataFrame.ts'
 
 export interface DataSetEntry {
   name: string

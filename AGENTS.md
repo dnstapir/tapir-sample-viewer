@@ -16,6 +16,7 @@ These project rules refine the user's global instructions.
 - **Code changes are allowed in this project without asking first.** This overrides the global "only edit when explicitly requested" rule for this repository only.
 - **Every change must be explained: why** (which plan item / decision / bug) **and how** (what was changed, in which files). Keep it short and concrete.
 - **Ask before** destructive or hard-to-reverse actions: deleting or moving files, git history operations, pushing.
+- **Ask before** adding or updating packages (`pnpm add`, `pnpm update`, version bumps, lockfile changes, `overrides`).
 - **Ask** when a requirement is unclear or a new decision is needed; record the answer in PLAN.md (decision table or open questions). Do not guess.
 - When the user is exploring options, present options with trade-offs; do not implement.
 - Cite sources (docs, npm registry, file paths) for factual claims; verify versions/APIs instead of relying on memory.
@@ -33,18 +34,16 @@ pnpm lint        # biome lint
 pnpm format      # biome: format + organize imports (writes files)
 pnpm test        # vitest run
 pnpm typecheck   # tsc --noEmit
-pnpm generate:large [rows]  # gitignored large test file in src/parquets/ (excluded from tests)
 ```
 
-Run `pnpm format`, `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done. CI (`check.yaml`) runs `biome ci` (lint + format check), typecheck and tests on every push and on pull requests to `main`, and fails on unformatted code.
+Run `pnpm format`, `pnpm lint`, `pnpm typecheck` and `pnpm test` before considering a task done. CI (`check.yaml`) runs `pnpm audit --prod` (blocking) and `pnpm audit --dev` (warning only), `biome ci` (lint + format check), typecheck and tests on every push and on pull requests to `main`, and fails on unformatted code.
 
 ## Hard rules
 
 - **No React.** Do not add `react`, `react-dom`, or any package that depends on them.
-- **No `hyperparam` package.** Its JS bundle imports React. Reimplement what is needed in `src/components/` or `src/lib/`.
-- **`hightable` only via `hightable/dataframe`.** Never import from `'hightable'` (root), which contains the React components.
+- **No `hyperparam` or `hightable` package.** Both ship React. The parts that are used are ported into `src/components/` and `src/lib/` (`dataframe.ts`, `sortableDataFrame.ts`, `stringify.ts` from HighTable v0.26.4, PLAN.md D16).
 - **Dependency versions**: caret ranges in `package.json`; always commit `pnpm-lock.yaml`.
-- **Keep `autoInstallPeers: false`** in `pnpm-workspace.yaml`; otherwise pnpm installs `hightable`'s React peers.
+- **Keep `autoInstallPeers: false`** in `pnpm-workspace.yaml`; otherwise pnpm installs `@solidjs/router`, a peer of `@solidjs/testing-library`.
 - **TypeScript 7** upgrade is a separate step after the Biome switch (PLAN.md D13).
 - **All UI text in English.**
 - **Accessibility is a legal requirement** (EU: EN 301 549 / WCAG 2.1 AA; build to WCAG 2.2 AA). Follow PLAN.md section 4.3 for every component.
@@ -62,17 +61,18 @@ src/
   lenses/              # ParquetMetadata, ParquetLayout, ParquetGrid
   table/               # virtualized sortable data grid (own windowing, see src/lib/viewport.ts)
   search/              # SearchBar, SearchHelp
-  lib/                 # pure TS: format, layout, grid, dataset, parquetDataFrame,
-                       #          search, searchScan, filteredDataFrame, concatDataFrame, abort
+  lib/                 # pure TS: format, layout, grid, json, dataset, parquetDataFrame,
+                       #          search, searchScan, filteredDataFrame, concatDataFrame, abort,
+                       #          columnWidths, viewport, dataframe, sortableDataFrame, stringify
   parquets/            # sample .parquet files for tests (the app loads files from the server)
 public/                # TAPIR logos
 test/                  # vitest
 ```
 
 - Keep parquet/byte-layout logic in `src/lib/` as pure functions with unit tests; components only render.
-- Data access goes through the `DataFrame` contract from `hightable/dataframe` (`getCell`, `getRowNumber`, `fetch`, `eventTarget` `resolve` events), wrapped by `sortableDataFrame`.
+- Data access goes through the `DataFrame` contract in `src/lib/dataframe.ts` (`getCell`, `getRowNumber`, `fetch`, `eventTarget` `resolve` events), wrapped by `sortableDataFrame` (`src/lib/sortableDataFrame.ts`).
 - Read row data lazily (per row-group chunk); never decode a whole large file up front.
-- Pass `compressors` from `hyparquet-compressors` to hyparquet read calls.
+- Parquet files must be SNAPPY-compressed (or uncompressed); hyparquet's built-in decoder is used. Do not add `hyparquet-compressors` (PLAN.md D15).
 
 ## SolidJS conventions
 
@@ -112,3 +112,11 @@ Biome (`biome.json`, PLAN.md D12) lints and formats `.ts`, `.tsx`, `.js`, `.json
 ## Deployment
 
 GitHub Pages via `.github/workflows/deploy.yaml` (pnpm, Node 24). Vite `base: './'` must stay so the app works from a sub-path.
+
+## Security (PLAN.md D14)
+
+- The Content Security Policy is a `<meta>` tag in `index.html` (GitHub Pages cannot set headers); it applies in dev and production. New external origins, inline scripts or `data:` URLs must be added there; check the browser for `securitypolicyviolation` events.
+- Fonts are self-hosted in `public/fonts/` (Mulish, OFL licence in `OFL.txt`). Do not load resources from third-party CDNs.
+- GitHub Actions use major tags (`@v6`); all are from GitHub's `actions/` organisation.
+- `deploy.yaml`: lint and tests run in the `test` job; the `build` job only builds and uploads `dist/`. Keep test tooling out of the build job.
+- Supply-chain settings in `pnpm-workspace.yaml` (`minimumReleaseAge`, `trustPolicy`, `blockExoticSubdeps`, `strictDepBuilds`) must stay; no package may run install scripts (`allowBuilds` is empty). Review `pnpm-lock.yaml` diffs on every dependency change.

@@ -1,10 +1,5 @@
-import type { DataFrame } from 'hightable/dataframe'
-import {
-  checkSignal,
-  validateFetchParams,
-  validateGetCellParams,
-  validateGetRowNumberParams,
-} from 'hightable/dataframe'
+import type { DataFrame } from './dataframe.ts'
+import { checkSignal, validateFetchParams, validateGetCellParams, validateGetRowNumberParams } from './dataframe.ts'
 
 export function consecutiveRanges(rows: readonly number[]): { rowStart: number; rowEnd: number }[] {
   const ranges: { rowStart: number; rowEnd: number }[] = []
