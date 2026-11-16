@@ -146,6 +146,20 @@ main {
   height: auto;
 }
 
+.social-links-container {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.social-link {
+  text-decoration: none;
+}
+
+.social-link img {
+  width: auto;
+  height: 1.2rem;
+}
+
 .file-chooser {
   align-items: center;
   background-color: #f5f5f8;

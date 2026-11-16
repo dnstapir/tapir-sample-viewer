@@ -55,9 +55,28 @@ export default function Page(props: PageProps): JSX.Element {
     <Show when={props.entries.length > 0} fallback={<p class="placeholder">No parquet files found</p>}>
       <header class="top-header">
         <h1>
-          <img class="tapir-logo" src="TAPIR-positiv.svg" alt="" />
-          DNS Tapir Parquet Parser
+          <img class="tapir-logo" src="./TAPIR-positiv.svg" alt="" />
+          DNS TAPIR Sample Viewer
         </h1>
+        <div class="social-links-container">
+          <a
+            href="https://github.com/dnstapir/tapir-sample-viewer"
+            title="https://github.com/dnstapir/tapir-sample-viewer"
+            class="social-link"
+          >
+            <img src="/github-logo-white.svg" alt="GitHub" />
+          </a>
+          <a
+            href="https://www.linkedin.com/company/dnstapir/"
+            title="https://www.linkedin.com/company/dnstapir/"
+            class="social-link"
+          >
+            <img src="./linkedin-logo-white.svg" alt="LinkedIn" />
+          </a>
+          <a href="https://www.dnstapir.se/" title="https://www.dnstapir.se/" class="social-link">
+            <img src="./TAPIR-negativ.svg" alt="DNS TAPIR" />
+          </a>
+        </div>
       </header>
       <div class="file-chooser">
         <label for={fileSelectId}>Choose file</label>
