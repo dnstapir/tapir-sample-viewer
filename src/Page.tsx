@@ -64,7 +64,7 @@ export default function Page(props: PageProps): JSX.Element {
             title="https://github.com/dnstapir/tapir-sample-viewer"
             class="social-link"
           >
-            <img src="/github-logo-white.svg" alt="GitHub" />
+            <img src="./github-logo-white.svg" alt="GitHub" />
           </a>
           <a
             href="https://www.linkedin.com/company/dnstapir/"
